@@ -365,6 +365,14 @@ export default async (dom: HTMLElement, button?: string, event?: Event): Promise
         if (type == "pin" && originPin) {
             md = md.concat(originPinMD) //解决保存转发的想法异常
         }
+
+        // 统一添加 Markdown 一级标题（想法若无特定标题则保留正文结构）
+        const markdownTitle = title && title !== "无标题" && type !== 'pin' ? `# ${title}` : ""
+        if (markdownTitle) {
+            md = [markdownTitle].concat(md)
+        }
+
+        // 若启用 frontmatter，将其放在最顶端
         if (copy_save_fm) {
             md = [getFrontmatter()].concat(md)//放到剪贴板，string[]
         }
@@ -373,10 +381,8 @@ export default async (dom: HTMLElement, button?: string, event?: Event): Promise
             commentText ? commentText = '\n\n---\n\n## 评论\n\n' + commentText : 0
             if (commentText) md.push(commentText)
         }
-        if (type != 'pin' && !copy_save_fm)
-            return { textString: [title].concat(md).join('\n\n') }//复制内容增加标题
-        else
-            return { textString: md.join('\n\n') }
+
+        return { textString: md.join('\n\n'), title: getFilename() }
     }
     // ============================以下只有 text 或 zip 2种情况===========================
 
@@ -387,8 +393,9 @@ export default async (dom: HTMLElement, button?: string, event?: Event): Promise
         if (type == "pin" && originPin) {
             md2 = originPinMD
         }
+        const markdownTitle = title && title !== "无标题" && type !== 'pin' ? `# ${title}\n\n` : ""
         return {
-            textString: getFrontmatter() + (TOC ? TOC.join("\n\n") + '\n\n' : '') + parser(lex).join("\n\n") + md2.join("\n\n") + commentText,
+            textString: getFrontmatter() + '\n' + markdownTitle + (TOC ? TOC.join("\n\n") + '\n\n' : '') + parser(lex).join("\n\n") + md2.join("\n\n") + commentText,
             title: getFilename()
         }
     }

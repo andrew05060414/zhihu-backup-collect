@@ -120,6 +120,19 @@ function registerBtn() {
 registerBtn()
 
 async function copyText(text: string): Promise<void> {
+    // 1. 优先使用油猴特权 API，不受手势过期或焦点丢失影响
+    try {
+        // @ts-ignore
+        if (typeof GM_setClipboard === "function") {
+            // @ts-ignore
+            GM_setClipboard(text, "text")
+            return
+        }
+    } catch (e) {
+        console.warn("GM_setClipboard 写入失败，尝试其他方案:", e)
+    }
+
+    // 2. 尝试标准现代 Clipboard API
     if (navigator.clipboard?.writeText) {
         try {
             await navigator.clipboard.writeText(text)
@@ -129,13 +142,18 @@ async function copyText(text: string): Promise<void> {
         }
     }
 
+    // 3. 降级方案：创建临时文本域
     const textarea = document.createElement("textarea")
     textarea.value = text
     textarea.style.position = "fixed"
+    textarea.style.left = "-9999px"
+    textarea.style.top = "-9999px"
     textarea.style.opacity = "0"
     document.body.appendChild(textarea)
     try {
+        textarea.focus()
         textarea.select()
+        textarea.setSelectionRange(0, text.length)
         if (!document.execCommand("copy")) throw new Error("浏览器拒绝了剪贴板操作")
     } finally {
         textarea.remove()

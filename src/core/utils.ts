@@ -78,30 +78,68 @@ export const ZhihuLink2NormalLink = (link: string): string => {
  */
 export const getTitle = (dom: HTMLElement, scene: string, type: string): string => {
     let t = ""
-    if (scene == "follow" || scene == "people" || scene == "collection" || scene == "pin") {
-        const contentItem = dom.closest('.ContentItem')
-        let title_dom = contentItem?.querySelector("h2.ContentItem-title a")
-        if (type == "answer" || type == "article") {
-            //搜索结果页最新讨论
-            title_dom = title_dom || dom.closest('.HotLanding-contentItem')?.querySelector("h2.ContentItem-title a")
-            t = textOf(title_dom)
+    try {
+        if (scene == "follow" || scene == "people" || scene == "collection" || scene == "pin") {
+            const contentItem = dom.closest('.ContentItem') ||
+                dom.closest('.HotLanding-contentItem') ||
+                dom.closest('.TopstoryItem') ||
+                dom.closest('.Feed') ||
+                dom.closest('.List-item')
 
+            let title_dom = contentItem?.querySelector("h2.ContentItem-title a") ||
+                contentItem?.querySelector(".ContentItem-title a") ||
+                contentItem?.querySelector("h2.ContentItem-title") ||
+                contentItem?.querySelector(".ContentItem-title") ||
+                contentItem?.querySelector("a.QuestionItem-title") ||
+                contentItem?.querySelector("a[data-za-detail-view-element_name='Title']") ||
+                contentItem?.querySelector("h2 a") ||
+                contentItem?.querySelector("h2")
+
+            if (type == "answer" || type == "article") {
+                t = textOf(title_dom)
+            } else {
+                // 想法
+                if (title_dom) {
+                    t = "想法：" + textOf(title_dom) + '-' + (dom.innerText || "").slice(0, 16).trim().replace(/\s/g, "")
+                } else {
+                    t = "想法：" + (dom.innerText || "").slice(0, 24).trim().replace(/\s/g, "")
+                }
+            }
         }
-        else {//想法
-            if (title_dom) {
-                t = "想法：" + textOf(title_dom) + '-' + (dom.innerText || "").slice(0, 16).trim().replace(/\s/g, "")
-            } else t = "想法：" + (dom.innerText || "").slice(0, 24).trim().replace(/\s/g, "")
+        else if (scene == "question" || scene == "answer") {
+            const page = dom.closest('.QuestionPage') || document
+            t = (page.querySelector("meta[itemprop=name]") as HTMLMetaElement | null)?.content ||
+                document.querySelector("h1.QuestionHeader-title")?.textContent ||
+                document.querySelector(".QuestionHeader-title")?.textContent ||
+                page.querySelector("h1")?.textContent ||
+                ""
+        }
+        else if (scene == "article") {
+            t = textOf(dom.closest('.Post-Main')?.querySelector("h1.Post-Title")) ||
+                textOf(document.querySelector("h1.Post-Title")) ||
+                textOf(document.querySelector("header.Post-Header h1")) ||
+                textOf(document.querySelector("h1")) ||
+                ""
+        }
+    } catch (e) {
+        console.warn("解析标题发生异常:", e)
+    }
+
+    // 多重兜底方案：从卡片内部或页面内寻找可能的标题节点
+    if (!t || !t.trim()) {
+        const fallbackDom = dom.closest('.ContentItem') || dom.closest('.Post-Main') || dom.closest('.QuestionPage')
+        const candidate = fallbackDom?.querySelector("h1, h2, .ContentItem-title, [itemprop='name']")
+        t = (candidate as HTMLMetaElement)?.content || candidate?.textContent || ""
+    }
+
+    // 终极兜底：从页面 document.title 提取知乎标题
+    if (!t || !t.trim()) {
+        const docTitle = typeof document !== "undefined" ? document.title : ""
+        if (docTitle) {
+            t = docTitle.replace(/\s*[-_]\s*(?:知乎|Zhihu).*/i, "").trim()
         }
     }
-    //问题/回答
-    else if (scene == "question" || scene == "answer") {
-        t = (dom.closest('.QuestionPage')?.querySelector("meta[itemprop=name]") as HTMLMetaElement | null)?.content || ""
-    }
-    //文章
-    else if (scene == "article") {
-        t = textOf(dom.closest('.Post-Main')?.querySelector("h1.Post-Title"))
-    }
-    else t = "无标题"
+
     t = t.trim() || "无标题"
     //替换英文问号为中文问号，因标题中间也可能有问号所以不去掉
     return sanitizeFilename(t.replace(/\?/g, "？"))

@@ -3,6 +3,8 @@
 // @namespace    qtqz
 // @source       https://github.com/qtqz/zhihu-backup-collect
 // @version      0.11.6
+// @downloadURL  https://raw.githubusercontent.com/andrew05060414/zhihu-backup-collect/andrew-main/dist/tampermonkey-script.js
+// @updateURL    https://raw.githubusercontent.com/andrew05060414/zhihu-backup-collect/andrew-main/dist/tampermonkey-script.js
 // @description  将你喜欢的知乎回答/文章/想法保存为 markdown / zip / png
 // @author       qtqz
 // @match        https://www.zhihu.com/follow
@@ -21,48 +23,11 @@
 // @grant        GM_getValue
 // @grant        GM_registerMenuCommand
 // @grant        GM_unregisterMenuCommand
+// @grant        GM_setClipboard
 // ==/UserScript==
-
-/** 
-## Changelog
-
-* 0.11.6（2026-02-01）:
-    - 修复有时候无法保存评论中链接的问题
-    - 修复无法保存想法中的用户的问题
-    - 修复突然无法输入备注的问题
-* 0.11.3（2025-12-04）:
-    - 修复一大堆关于公式的问题
-    - 修复脚注不能用的问题
-    - 跳过更多空白段落
-* 0.11.0（2025-12-03）:
-    - **可以保存内容到本地的指定目录**，便于分类，支持以多种格式保存
-    - 添加消息提示系统
-    - 样式和体验优化
-    - 删除无用的 info.json
-    - 为自定义保存文件名添加了默认值，方便修改
-    - 修复此问题：对于同一个内容，保存过 ZIP 后，评论中图片链接就永久变为本地链接，影响再次保存
-* 0.10.52（2025-10-08）:
-    - 修复知乎更新后无法保存想法中图片的问题
-* 0.10.51（202...
-...
-
- */
 
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
-
-/***/ 972
-(module, exports, __webpack_require__) {
-
-var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function(a,b){if(true)!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_FACTORY__ = (b),
-		__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
-		(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
-		__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));else // removed by dead control flow
-{}})(this,function(){"use strict";function b(a,b){return"undefined"==typeof b?b={autoBom:!1}:"object"!=typeof b&&(console.warn("Deprecated: Expected third argument to be a object"),b={autoBom:!b}),b.autoBom&&/^\s*(?:text\/\S*|application\/xml|\S*\/\S*\+xml)\s*;.*charset\s*=\s*utf-8/i.test(a.type)?new Blob(["\uFEFF",a],{type:a.type}):a}function c(a,b,c){var d=new XMLHttpRequest;d.open("GET",a),d.responseType="blob",d.onload=function(){g(d.response,b,c)},d.onerror=function(){console.error("could not download file")},d.send()}function d(a){var b=new XMLHttpRequest;b.open("HEAD",a,!1);try{b.send()}catch(a){}return 200<=b.status&&299>=b.status}function e(a){try{a.dispatchEvent(new MouseEvent("click"))}catch(c){var b=document.createEvent("MouseEvents");b.initMouseEvent("click",!0,!0,window,0,0,0,80,20,!1,!1,!1,!1,0,null),a.dispatchEvent(b)}}var f="object"==typeof window&&window.window===window?window:"object"==typeof self&&self.self===self?self:"object"==typeof __webpack_require__.g&&__webpack_require__.g.global===__webpack_require__.g?__webpack_require__.g:void 0,a=f.navigator&&/Macintosh/.test(navigator.userAgent)&&/AppleWebKit/.test(navigator.userAgent)&&!/Safari/.test(navigator.userAgent),g=f.saveAs||("object"!=typeof window||window!==f?function(){}:"download"in HTMLAnchorElement.prototype&&!a?function(b,g,h){var i=f.URL||f.webkitURL,j=document.createElement("a");g=g||b.name||"download",j.download=g,j.rel="noopener","string"==typeof b?(j.href=b,j.origin===location.origin?e(j):d(j.href)?c(b,g,h):e(j,j.target="_blank")):(j.href=i.createObjectURL(b),setTimeout(function(){i.revokeObjectURL(j.href)},4E4),setTimeout(function(){e(j)},0))}:"msSaveOrOpenBlob"in navigator?function(f,g,h){if(g=g||f.name||"download","string"!=typeof f)navigator.msSaveOrOpenBlob(b(f,h),g);else if(d(f))c(f,g,h);else{var i=document.createElement("a");i.href=f,i.target="_blank",setTimeout(function(){e(i)})}}:function(b,d,e,g){if(g=g||open("","_blank"),g&&(g.document.title=g.document.body.innerText="downloading..."),"string"==typeof b)return c(b,d,e);var h="application/octet-stream"===b.type,i=/constructor/i.test(f.HTMLElement)||f.safari,j=/CriOS\/[\d]+/.test(navigator.userAgent);if((j||h&&i||a)&&"undefined"!=typeof FileReader){var k=new FileReader;k.onloadend=function(){var a=k.result;a=j?a:a.replace(/^data:[^;]*;/,"data:attachment/file;"),g?g.location.href=a:location=a,g=null},k.readAsDataURL(b)}else{var l=f.URL||f.webkitURL,m=l.createObjectURL(b);g?g.location=m:location.href=m,g=null,setTimeout(function(){l.revokeObjectURL(m)},4E4)}});f.saveAs=g.saveAs=g, true&&(module.exports=g)});
-
-//# sourceMappingURL=FileSaver.min.js.map
-
-/***/ },
 
 /***/ 1
 (module, __unused_webpack_exports, __webpack_require__) {
@@ -108,17 +73,11 @@ const lexer = (input, type) => {
             return [];
         }
         let pinParagraphs = []; //二级包-一级
-        const firstNode = input[0];
-        let dom = firstNode?.parentElement ||
-            (firstNode?.parentNode instanceof Element ? firstNode.parentNode : null);
-        if (!dom)
-            return [];
+        let dom = input[0].parentNode; //RichText
         //被转发的想法，首行添加主人
         if (dom.closest('.PinItem-content-originpin')) {
             let p = document.createElement("p");
-            const owner = dom.closest('.PinItem-content-originpin').firstElementChild;
-            if (owner)
-                p.textContent = owner.textContent || "";
+            p.innerHTML = dom.closest('.PinItem-content-originpin').firstElementChild.textContent;
             pinParagraphs.push({
                 type: _tokenTypes__WEBPACK_IMPORTED_MODULE_0__/* .TokenType */ .k.Text,
                 content: Tokenize(p),
@@ -153,7 +112,7 @@ const lexer = (input, type) => {
         else {
             //此时dom不在源想法内
             let parent = dom.closest('.PinItem');
-            if (parent && !parent.querySelector(".PinItem-content-originpin") && parent.querySelector("a.LinkCard")) {
+            if (!parent.querySelector(".PinItem-content-originpin") && parent.querySelector("a.LinkCard")) {
                 let a = parent.querySelector("a.LinkCard");
                 let p = document.createElement("p");
                 let a2 = document.createElement("a");
@@ -174,28 +133,14 @@ const lexer = (input, type) => {
     let skipEmpty = window.skip_empty_p;
     for (let i = 0; i < input.length; i++) {
         const node = input[i];
-        //console.log(node)
-        if (node.nodeType === Node.TEXT_NODE) {
-            const text = node.textContent || "";
-            if (text) {
-                tokens.push({
-                    type: _tokenTypes__WEBPACK_IMPORTED_MODULE_0__/* .TokenType */ .k.Text,
-                    content: [{
-                            type: _tokenTypes__WEBPACK_IMPORTED_MODULE_0__/* .TokenType */ .k.PlainText,
-                            text: text.replace(/\u200B/g, '').replace(/\t/g, '').replace(/^\s{2,}/, ''),
-                            dom: node,
-                        }],
-                    dom: node,
-                });
-            }
-            continue;
-        }
-        const tagName = node.nodeName.toLowerCase();
-        switch (tagName) {
+        if (!node) continue;
+        try {
+            const tagName = (node.nodeName || "").toLowerCase();
+            switch (tagName) {
             case "h2": {
                 tokens.push({
                     type: _tokenTypes__WEBPACK_IMPORTED_MODULE_0__/* .TokenType */ .k.H2,
-                    text: node.textContent || "",
+                    text: node.textContent,
                     dom: node
                 });
                 break;
@@ -209,36 +154,29 @@ const lexer = (input, type) => {
                 break;
             }
             case "div": {
-                if (node.classList.contains("highlight")) {
+                if (node.classList?.contains("highlight")) {
                     const code = node.querySelector("pre > code");
-                    const className = code?.className || "";
-                    const language = className.match(/(?:language|lang)-([^\s]+)/)?.[1];
+                    const lang = code?.classList?.value ? code.classList.value.slice(9) : "";
                     tokens.push({
                         type: _tokenTypes__WEBPACK_IMPORTED_MODULE_0__/* .TokenType */ .k.Code,
                         content: node.textContent,
-                        language,
+                        language: lang,
                         dom: node
                     });
                 }
                 else if (node.classList.contains("RichText-LinkCardContainer")) {
-                    const link = node.querySelector("a");
-                    if (link) {
-                        tokens.push({
-                            type: _tokenTypes__WEBPACK_IMPORTED_MODULE_0__/* .TokenType */ .k.Link,
-                            text: link.getAttribute("data-text") || link.textContent || "",
-                            href: (0,_utils__WEBPACK_IMPORTED_MODULE_1__/* .ZhihuLink2NormalLink */ .IQ)(link.href),
-                            dom: node
-                        });
-                    }
+                    const link = node.firstChild;
+                    tokens.push({
+                        type: _tokenTypes__WEBPACK_IMPORTED_MODULE_0__/* .TokenType */ .k.Link,
+                        text: link.getAttribute("data-text"),
+                        href: (0,_utils__WEBPACK_IMPORTED_MODULE_1__/* .ZhihuLink2NormalLink */ .IQ)(link.href),
+                        dom: node
+                    });
                 }
                 else if (node.querySelector("video")) {
-                    const video = node.querySelector("video");
-                    const src = video?.getAttribute("src");
-                    if (!src)
-                        break;
                     tokens.push({
                         type: _tokenTypes__WEBPACK_IMPORTED_MODULE_0__/* .TokenType */ .k.Video,
-                        src,
+                        src: node.querySelector("video").getAttribute("src"),
                         local: false,
                         dom: node
                     });
@@ -248,16 +186,9 @@ const lexer = (input, type) => {
                         type: _tokenTypes__WEBPACK_IMPORTED_MODULE_0__/* .TokenType */ .k.Text,
                         content: [{
                                 type: _tokenTypes__WEBPACK_IMPORTED_MODULE_0__/* .TokenType */ .k.PlainText,
-                                text: node.textContent || ""
+                                text: node.textContent
                             }],
                         dom: node
-                    });
-                }
-                else if (node.textContent) {
-                    tokens.push({
-                        type: _tokenTypes__WEBPACK_IMPORTED_MODULE_0__/* .TokenType */ .k.Text,
-                        content: Tokenize(node),
-                        dom: node,
                     });
                 }
                 break;
@@ -272,12 +203,11 @@ const lexer = (input, type) => {
             }
             case "figure": {
                 const img = node.querySelector("img");
-                if (img?.classList.contains("ztext-gif")) {
+                if (img?.classList?.contains("ztext-gif")) {
                     const guessSrc = (src) => {
                         return src.replace(/\..{3,4}$/g, ".gif");
                     };
-                    const srcValue = img.getAttribute("src") || img.getAttribute("data-thumbnail");
-                    const src = srcValue ? guessSrc(srcValue) : "";
+                    const src = guessSrc(img.getAttribute("src") || img.getAttribute("data-thumbnail") || "");
                     if (src) {
                         tokens.push({
                             type: _tokenTypes__WEBPACK_IMPORTED_MODULE_0__/* .TokenType */ .k.Gif,
@@ -303,8 +233,8 @@ const lexer = (input, type) => {
                         });
                     }
                 }
-                else {
-                    const src = img?.getAttribute("data-actualsrc") || img?.getAttribute("data-original") || img?.getAttribute("src") || "";
+                else if (img) {
+                    const src = img.getAttribute("data-actualsrc") || img.getAttribute("data-original") || img.src || "";
                     if (src) {
                         tokens.push({
                             type: _tokenTypes__WEBPACK_IMPORTED_MODULE_0__/* .TokenType */ .k.Figure,
@@ -340,7 +270,7 @@ const lexer = (input, type) => {
             }
             case "ol": {
                 // 检查是否为脚注/参考文献列表
-                if (node.classList.contains('ReferenceList')) {
+                if (node.classList?.contains('ReferenceList')) {
                     const childNodes = Array.from(node.querySelectorAll("li"));
                     const items = childNodes.map((li) => {
                         // 提取脚注编号，从 id="ref_1" 中提取 "1"
@@ -368,7 +298,7 @@ const lexer = (input, type) => {
                 break;
             }
             case "p": {
-                if (skipEmpty && (node.classList.contains('ztext-empty-paragraph') || !(node.textContent || "").trim()))
+                if (skipEmpty && (node.classList?.contains('ztext-empty-paragraph') || (node.textContent || '').length == 0))
                     break;
                 tokens.push({
                     type: _tokenTypes__WEBPACK_IMPORTED_MODULE_0__/* .TokenType */ .k.Text,
@@ -391,10 +321,7 @@ const lexer = (input, type) => {
                     const rows = Array.from(table.rows);
                     for (let row of rows) {
                         const cells = Array.from(row.cells);
-                        res.push(cells.map((cell) => (cell.textContent || "")
-                            .replace(/\s+/g, " ")
-                            .trim()
-                            .replace(/\|/g, "\\|")));
+                        res.push(cells.map((cell) => cell.innerHTML.replace(/<a.*?href.*?>(.*?)<svg.*?>.*?<\/svg><\/a>/gms, "$1").replace(/<span>(.*?)<\/span>/gms, "$1")));
                     }
                     return res;
                 };
@@ -405,6 +332,19 @@ const lexer = (input, type) => {
                     dom: node,
                 });
                 break;
+            }
+        }
+        } catch (e) {
+            console.warn("处理节点异常，降级为纯文本:", e);
+            if (node.textContent?.trim()) {
+                tokens.push({
+                    type: _tokenTypes__WEBPACK_IMPORTED_MODULE_0__/* .TokenType */ .k.Text,
+                    content: [{
+                        type: _tokenTypes__WEBPACK_IMPORTED_MODULE_0__/* .TokenType */ .k.PlainText,
+                        text: node.textContent.trim()
+                    }],
+                    dom: node
+                });
             }
         }
     }
@@ -421,7 +361,7 @@ const Tokenize = (node) => {
     if (typeof node == "string") {
         return [{
                 type: _tokenTypes__WEBPACK_IMPORTED_MODULE_0__/* .TokenType */ .k.PlainText,
-                text: node.replace(/\t/g, '').replace(/^\s{2,}/, ''), // 修复被误识别为代码块，修复公式后面缺少空格的问题
+                text: node.replace('\t', '').replace(/^\s{2,}/, ''), // 修复被误识别为代码块，修复公式后面缺少空格的问题
             }];
     }
     let childs = Array.from(node.childNodes);
@@ -434,17 +374,15 @@ const Tokenize = (node) => {
     }
     catch { }
     for (let child of childs) {
-        if (child.nodeType === Node.TEXT_NODE) {
+        if (child.nodeType == child.TEXT_NODE) {
             res.push({
                 type: _tokenTypes__WEBPACK_IMPORTED_MODULE_0__/* .TokenType */ .k.PlainText,
-                text: (child.textContent || '').replace(/\u200B/g, '').replace(/\t/g, '').replace(/^\s{2,}/, ''), // 修复被误识别为代码块，修复公式后面缺少空格的问题
+                text: child.textContent.replace(/\u200B/g, '').replace('\t', '').replace(/^\s{2,}/, ''), // 修复被误识别为代码块，修复公式后面缺少空格的问题
                 dom: child,
             });
         }
         else {
             let el = child;
-            if (!(child instanceof Element))
-                continue;
             switch (el.tagName.toLowerCase()) {
                 case "b": {
                     res.push({
@@ -479,10 +417,10 @@ const Tokenize = (node) => {
                 }
                 case "span": {
                     try {
-                        if (el.classList.contains("ztext-math")) {
+                        if (el.classList?.contains("ztext-math")) {
                             // 根据是否存在 MathJax_SVG_Display 类来判断是否为块级公式
                             const hasDisplayClass = el.querySelector(".MathJax_SVG_Display") !== null;
-                            const content = (el.getAttribute("data-tex") || "").trim();
+                            const content = el.getAttribute("data-tex").trim();
                             // 如果公式包含 \tag 命令，也应该是块级公式（\tag 只能在 display mode 中使用）
                             const hasTag = content.includes('\\tag');
                             const isDisplayMath = hasDisplayClass || hasTag;
@@ -493,29 +431,26 @@ const Tokenize = (node) => {
                                 dom: el,
                             });
                         }
-                        else if (el.children[0]?.classList.contains("RichContent-EntityWord")) { //搜索词
+                        else if (el.children?.[0]?.classList?.contains("RichContent-EntityWord")) { //搜索词
                             res.push({
                                 type: _tokenTypes__WEBPACK_IMPORTED_MODULE_0__/* .TokenType */ .k.PlainText,
-                                text: el.textContent || "",
+                                text: el.innerText,
                                 dom: el,
                             });
                         }
                         else if (el.querySelector('a')) { //想法中的用户名片
                             res.push({
                                 type: _tokenTypes__WEBPACK_IMPORTED_MODULE_0__/* .TokenType */ .k.InlineLink,
-                                text: el.textContent || "",
+                                text: el.innerText,
                                 href: (0,_utils__WEBPACK_IMPORTED_MODULE_1__/* .ZhihuLink2NormalLink */ .IQ)(el.querySelector("a").href),
                                 dom: el,
                             });
-                        }
-                        else {
-                            res.push(...Tokenize(el));
                         }
                     }
                     catch (e) {
                         res.push({
                             type: _tokenTypes__WEBPACK_IMPORTED_MODULE_0__/* .TokenType */ .k.PlainText,
-                            text: el.textContent || "",
+                            text: el.innerText,
                             dom: el,
                         });
                         //console.error(el, el.innerText)
@@ -528,7 +463,7 @@ const Tokenize = (node) => {
                     if (el.href.startsWith('https://zhida.zhihu.com/search')) {
                         res.push({
                             type: _tokenTypes__WEBPACK_IMPORTED_MODULE_0__/* .TokenType */ .k.PlainText,
-                            text: el.textContent || "",
+                            text: el.innerText,
                             dom: el,
                         });
                     }
@@ -543,12 +478,8 @@ const Tokenize = (node) => {
                 }
                 case "sup": {
                     const link = el.firstElementChild;
-                    if (!link) {
-                        res.push(...Tokenize(el));
-                        break;
-                    }
                     // 提取脚注编号，如 [1] -> 1
-                    const footnoteText = (link.textContent || '').replace(/[\[\]]/g, '');
+                    const footnoteText = link.textContent.replace(/[\[\]]/g, '');
                     res.push({
                         type: _tokenTypes__WEBPACK_IMPORTED_MODULE_0__/* .TokenType */ .k.PlainText,
                         text: `[^${footnoteText}]`,
@@ -560,7 +491,7 @@ const Tokenize = (node) => {
                     //下划线内容等question/478154391/answer/121816724037
                     res.push({
                         type: _tokenTypes__WEBPACK_IMPORTED_MODULE_0__/* .TokenType */ .k.PlainText,
-                        text: (child.textContent || '').replace(/\u200B/g, '').replace(/\t/g, '').replace(/^\s{2,}/, ''),
+                        text: child.textContent.replace(/\u200B/g, '').replace('\t', '').replace(/^\s{2,}/, ''),
                         dom: child,
                     });
                 }
@@ -589,8 +520,6 @@ const Tokenize = (node) => {
 /* harmony export */ });
 /* unused harmony exports showObsidianModal, saveObsidianConfig */
 /* harmony import */ var _toast__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(197);
-/* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(379);
-
 
 // showToast('欢迎使用知乎助手-备份到obsidian插件');
 /**
@@ -687,7 +616,7 @@ function injectObsidianModal() {
             opacity: 1;
             transition: opacity 0.3s ease-in-out;
         }
-        
+
         #zhihu-obsidian-modal .modal-overlay {
             position: absolute;
             top: 0;
@@ -699,7 +628,7 @@ function injectObsidianModal() {
             align-items: center;
             justify-content: center;
         }
-        
+
         #zhihu-obsidian-modal .modal-content {
             background-color: white;
             border-radius: 8px;
@@ -711,7 +640,7 @@ function injectObsidianModal() {
             display: flex;
             flex-direction: column;
         }
-        
+
         #zhihu-obsidian-modal .modal-header {
             background-color: rgb(221, 232, 249);
             padding: 16px 20px;
@@ -720,7 +649,7 @@ function injectObsidianModal() {
             justify-content: space-between;
             align-items: center;
         }
-        
+
         #zhihu-obsidian-modal .modal-header h3 {
             margin: 0;
             color: black;
@@ -730,7 +659,7 @@ function injectObsidianModal() {
             align-items: center;
             gap: 0.5em;
         }
-        
+
         #zhihu-obsidian-modal .close-btn {
             background: none;
             border: none;
@@ -744,25 +673,25 @@ function injectObsidianModal() {
             align-items: center;
             justify-content: center;
         }
-        
+
         #zhihu-obsidian-modal .close-btn:hover {
             background-color: rgba(23, 114, 246, 0.1);
             border-radius: 4px;
         }
-        
+
         #zhihu-obsidian-modal .modal-body {
             padding: 20px;
             flex: 1;
             overflow-y: auto;
         }
-        
+
         #zhihu-obsidian-modal .folder-selection {
             margin-bottom: 20px;
             display: flex;
             align-items: center;
             gap: 12px;
         }
-        
+
         #zhihu-obsidian-modal .selected-folder-info {
             background-color: rgb(221, 232, 249);
             border: 1px solid rgb(23, 114, 246);
@@ -773,7 +702,7 @@ function injectObsidianModal() {
             min-height: 20px;
             flex: 1;
         }
-        
+
         #zhihu-obsidian-modal .select-folder-btn {
             background-color: rgb(23, 114, 246);
             color: white;
@@ -786,16 +715,16 @@ function injectObsidianModal() {
             transition: background-color 0.2s;
             white-space: nowrap;
         }
-        
+
         #zhihu-obsidian-modal .select-folder-btn:hover {
             background-color: rgb(21, 101, 217);
         }
-        
+
         #zhihu-obsidian-modal .select-folder-btn:disabled {
             background-color: #ccc;
             cursor: not-allowed;
         }
-        
+
         #zhihu-obsidian-modal .folder-structure {
             background-color: #f8f9fa;
             border: 1px solid #dee2e6;
@@ -810,23 +739,23 @@ function injectObsidianModal() {
             white-space: pre-wrap;
             line-height: 1.4;
         }
-        
+
         #zhihu-obsidian-modal .folder-item {
             cursor: pointer;
             padding: 2px 4px;
             border-radius: 3px;
             transition: background-color 0.2s;
         }
-        
+
         #zhihu-obsidian-modal .folder-item:hover {
             background-color: rgba(23, 114, 246, 0.1);
         }
-        
+
         #zhihu-obsidian-modal .folder-item.selected {
             background-color: rgb(221, 232, 249);
             font-weight: bold;
         }
-        
+
         #zhihu-obsidian-modal .modal-footer {
             background-color: rgb(221, 232, 249);
             padding: 16px 20px;
@@ -835,7 +764,7 @@ function injectObsidianModal() {
             gap: 12px;
             justify-content: center;
         }
-        
+
         #zhihu-obsidian-modal .confirm-btn {
             background-color: rgb(23, 114, 246);
             color: white;
@@ -846,16 +775,16 @@ function injectObsidianModal() {
             font-size: 14px;
             font-weight: 500;
         }
-        
+
         #zhihu-obsidian-modal .confirm-btn:hover:not(:disabled) {
             background-color: rgb(21, 101, 217);
         }
-        
+
         #zhihu-obsidian-modal .confirm-btn:disabled {
             background-color: #ccc;
             cursor: not-allowed;
         }
-        
+
         #zhihu-obsidian-modal .cancel-btn {
             background-color: white;
             color: black;
@@ -866,17 +795,17 @@ function injectObsidianModal() {
             font-size: 14px;
             font-weight: 500;
         }
-        
+
         #zhihu-obsidian-modal .cancel-btn:hover {
             background-color: rgb(221, 232, 249);
         }
-        
+
         #zhihu-obsidian-modal .button-group {
             display: flex;
             gap: 8px;
             margin-bottom: 20px;
         }
-        
+
         #zhihu-obsidian-modal .option-btn {
             flex: 1;
             padding: 10px;
@@ -889,16 +818,16 @@ function injectObsidianModal() {
             cursor: pointer;
             transition: all 0.2s;
         }
-        
+
         #zhihu-obsidian-modal .option-btn:hover {
             background-color: rgba(23, 114, 246, 0.1);
         }
-        
+
         #zhihu-obsidian-modal .option-btn.selected {
             background-color: rgb(23, 114, 246);
             color: white;
         }
-        
+
         #zhihu-obsidian-modal .user-notes {
             margin-top: 20px;
             padding: 16px;
@@ -908,12 +837,12 @@ function injectObsidianModal() {
             font-size: 12px;
             color: #666;
         }
-        
+
         #zhihu-obsidian-modal .user-notes ul {
             margin: 0;
             padding-left: 16px;
         }
-        
+
         #zhihu-obsidian-modal .user-notes li {
             margin-bottom: 4px;
             line-height: 1.4;
@@ -949,24 +878,13 @@ function bindOptionButtons() {
  * 保存选中的选项到localStorage
  */
 function saveSelectedOption(optionText) {
-    try {
-        localStorage.setItem('zhihu-obsidian-selected-option', optionText);
-    }
-    catch (error) {
-        console.warn('保存 Obsidian 选项失败:', error);
-    }
+    localStorage.setItem('zhihu-obsidian-selected-option', optionText);
 }
 /**
  * 从localStorage加载选中的选项
  */
 function loadSelectedOption() {
-    try {
-        return localStorage.getItem('zhihu-obsidian-selected-option');
-    }
-    catch (error) {
-        console.warn('读取 Obsidian 选项失败:', error);
-        return null;
-    }
+    return localStorage.getItem('zhihu-obsidian-selected-option');
 }
 /**
  * 恢复按钮选中状态
@@ -975,9 +893,7 @@ function restoreButtonSelection() {
     const selectedOption = loadSelectedOption();
     let targetButton;
     if (selectedOption) {
-        const optionButtons = obsidianModal?.querySelectorAll('.option-btn');
-        targetButton = Array.from(optionButtons || [])
-            .find(button => button.getAttribute('data-text') === selectedOption);
+        targetButton = obsidianModal?.querySelector(`[data-text="${selectedOption}"]`);
     }
     // 如果没有保存的选项，默认选中第4个按钮
     if (!targetButton) {
@@ -1178,18 +1094,19 @@ function updateFolderHighlight(selectedPath) {
     allItems.forEach(item => {
         item.classList.remove('selected');
     });
-    // 用 dataset 比拼接 CSS selector 更安全，路径中的引号或括号不会破坏选择器。
-    const selectedItem = Array.from(structureElement.querySelectorAll('.folder-item'))
-        .find(item => item.getAttribute('data-path') === selectedPath);
-    selectedItem?.classList.add('selected');
+    // 高亮选中的文件夹
+    setTimeout(() => {
+        const selectedItem = structureElement.querySelector(`[data-path="${selectedPath}"]`);
+        if (selectedItem) {
+            selectedItem.classList.add('selected');
+        }
+    }, 100);
 }
 /**
  * 启用确认按钮
  */
 function enableConfirmButton() {
-    const confirmButton = obsidianModal?.querySelector('#confirm-save-btn');
-    if (confirmButton)
-        confirmButton.disabled = false;
+    (obsidianModal?.querySelector('#confirm-save-btn')).disabled = false;
 }
 // ============= 4. 文件夹管理 =============
 /**
@@ -1477,21 +1394,14 @@ const fileHandleManager = new FileHandleManager();
  * 从 localStorage 加载 Obsidian 配置
  */
 function loadObsidianConfig() {
-    try {
-        const config = localStorage.getItem("zhihu-obsidian-config");
-        if (config) {
-            const parsed = JSON.parse(config);
-            if (parsed && typeof parsed === "object") {
-                return {
-                    attachmentFolder: typeof parsed.attachmentFolder === "string" ? parsed.attachmentFolder : "assets",
-                    lastRootName: typeof parsed.lastRootName === "string" ? parsed.lastRootName : undefined,
-                    lastSelectedPath: typeof parsed.lastSelectedPath === "string" ? parsed.lastSelectedPath : undefined,
-                };
-            }
-        }
-    }
-    catch (error) {
-        console.warn('读取 Obsidian 配置失败，已使用默认配置:', error);
+    const config = localStorage.getItem("zhihu-obsidian-config");
+    if (config) {
+        const parsed = JSON.parse(config);
+        return {
+            attachmentFolder: parsed.attachmentFolder || "assets",
+            lastRootName: parsed.lastRootName,
+            lastSelectedPath: parsed.lastSelectedPath,
+        };
     }
     return {
         attachmentFolder: "assets",
@@ -1503,12 +1413,7 @@ function loadObsidianConfig() {
 function saveObsidianConfig(config) {
     const current = loadObsidianConfig();
     const updated = { ...current, ...config };
-    try {
-        localStorage.setItem("zhihu-obsidian-config", JSON.stringify(updated));
-    }
-    catch (error) {
-        console.warn('保存 Obsidian 配置失败:', error);
-    }
+    localStorage.setItem("zhihu-obsidian-config", JSON.stringify(updated));
 }
 /**
  * 保存目录选择状态到 localStorage
@@ -1528,6 +1433,36 @@ function loadDirectorySelection() {
         rootName: config.lastRootName,
         selectedPath: config.lastSelectedPath,
     };
+}
+/**
+ * 清理文件名，移除所有不允许的字符
+ * Windows/macOS/Linux 文件系统禁止的字符：< > : " / \ | ? * 以及控制字符
+ */
+function sanitizeFilename(filename) {
+    if (!filename || typeof filename !== 'string') {
+        return 'untitled';
+    }
+    return filename
+        // 移除所有控制字符（包括换行、回车、制表符等）
+        .replace(/[\x00-\x1f\x7f-\x9f]/g, '')
+        // 移除或替换文件系统非法字符
+        .replace(/[<>:"/\\|?*]/g, '-')
+        // 移除 Unicode 零宽字符和其他不可见字符
+        .replace(/[\u200B-\u200D\uFEFF]/g, '')
+        // 替换连续空白字符为单个空格
+        .replace(/\s+/g, ' ')
+        // 移除前后空格
+        .trim()
+        // 移除连续的点（避免 .. 等）
+        .replace(/\.{2,}/g, '.')
+        // 移除文件名开头和结尾的点和空格
+        .replace(/^[.\s]+|[.\s]+$/g, '')
+        // 限制长度（Windows 文件名最大255字节，保守起见限制200字符）
+        .substring(0, 200)
+        // 再次移除末尾的空格和点
+        .replace(/[.\s]+$/, '')
+        // 如果清理后为空，使用默认名称
+        || 'untitled';
 }
 // ============= 7. 主函数 =============
 /**
@@ -1600,8 +1535,6 @@ async function selectObsidianVault() {
 function dataUrlToBlob(dataUrl) {
     // 分离dataUrl的元数据和数据部分
     const parts = dataUrl.split(',');
-    if (parts.length < 2 || !parts[1])
-        throw new Error('无效的图片数据');
     const mime = parts[0].match(/:(.*?);/)?.[1] || 'image/png';
     const bstr = atob(parts[1]); // base64解码
     // 将字符串转换为Uint8Array
@@ -1612,15 +1545,6 @@ function dataUrlToBlob(dataUrl) {
     }
     // 创建Blob
     return new Blob([u8arr], { type: mime });
-}
-async function writeFileContents(fileHandle, content) {
-    const writable = await fileHandle.createWritable();
-    try {
-        await writable.write(content);
-    }
-    finally {
-        await writable.close();
-    }
 }
 /**
  * 解包ZIP文件到指定文件夹
@@ -1646,16 +1570,18 @@ async function unpackZipToFolder(zip, targetFolder) {
             let currentFolder = targetFolder;
             for (const folderName of pathParts) {
                 if (folderName) {
-                    const safeFolderName = (0,_utils__WEBPACK_IMPORTED_MODULE_1__/* .sanitizeFilename */ .Nz)(folderName);
+                    const safeFolderName = sanitizeFilename(folderName);
                     currentFolder = await currentFolder.getDirectoryHandle(safeFolderName, { create: true });
                 }
             }
             // 获取文件内容
             const content = await file.async('uint8array');
-            const safeFilename = (0,_utils__WEBPACK_IMPORTED_MODULE_1__/* .sanitizeFilename */ .Nz)(filename);
+            const safeFilename = sanitizeFilename(filename);
             // 创建并写入文件
             const fileHandle = await currentFolder.getFileHandle(safeFilename, { create: true });
-            await writeFileContents(fileHandle, content);
+            const writable = await fileHandle.createWritable();
+            await writable.write(content);
+            await writable.close();
             console.log(`已保存文件: ${filepath} -> ${safeFilename}`);
         }
         catch (error) {
@@ -1678,7 +1604,7 @@ async function saveFile(result, saveType) {
         if (!result.zip) {
             throw new Error('ZIP数据不存在');
         }
-        const folderName = (0,_utils__WEBPACK_IMPORTED_MODULE_1__/* .sanitizeFilename */ .Nz)(result.title);
+        const folderName = sanitizeFilename(result.title);
         try {
             const targetFolder = await finalHandle.getDirectoryHandle(folderName, { create: true });
             await unpackZipToFolder(result.zip, targetFolder);
@@ -1714,7 +1640,9 @@ async function saveFile(result, saveType) {
         try {
             const zipBlob = await result.zip.generateAsync({ type: 'blob' });
             const fileHandle = await finalHandle.getFileHandle(filename, { create: true });
-            await writeFileContents(fileHandle, zipBlob);
+            const writable = await fileHandle.createWritable();
+            await writable.write(zipBlob);
+            await writable.close();
             console.log(`成功保存ZIP文件: ${filename}`);
             (0,_toast__WEBPACK_IMPORTED_MODULE_0__/* .showToast */ .P)('✅ 保存成功');
         }
@@ -1732,7 +1660,9 @@ async function saveFile(result, saveType) {
         try {
             const blob = dataUrlToBlob(result.textString);
             const fileHandle = await finalHandle.getFileHandle(filename, { create: true });
-            await writeFileContents(fileHandle, blob);
+            const writable = await fileHandle.createWritable();
+            await writable.write(blob);
+            await writable.close();
             console.log(`成功保存图片文件: ${filename}`);
             (0,_toast__WEBPACK_IMPORTED_MODULE_0__/* .showToast */ .P)('✅ 保存成功');
         }
@@ -1749,7 +1679,9 @@ async function saveFile(result, saveType) {
         const filename = result.title + '.md';
         try {
             const fileHandle = await finalHandle.getFileHandle(filename, { create: true });
-            await writeFileContents(fileHandle, result.textString);
+            const writable = await fileHandle.createWritable();
+            await writable.write(result.textString);
+            await writable.close();
             console.log(`成功保存MD文件: ${filename}`);
             (0,_toast__WEBPACK_IMPORTED_MODULE_0__/* .showToast */ .P)('✅ 保存成功');
         }
@@ -1770,7 +1702,7 @@ async function saveFile(result, saveType) {
  * @param assetsFolder assets文件夹名称，默认为'assets'
  */
 async function unpackZipCommon(zip, title, targetFolder, assetsFolder = 'assets') {
-    const safeAssetsFolder = (0,_utils__WEBPACK_IMPORTED_MODULE_1__/* .sanitizeFilename */ .Nz)(assetsFolder);
+    const safeAssetsFolder = sanitizeFilename(assetsFolder);
     // 1. 创建或获取assets文件夹
     const assetsDirHandle = await targetFolder.getDirectoryHandle(safeAssetsFolder, { create: true });
     // 2. 遍历ZIP中的所有文件
@@ -1787,16 +1719,18 @@ async function unpackZipCommon(zip, title, targetFolder, assetsFolder = 'assets'
             if (!pureFilename) {
                 continue;
             }
-            const safeFilename = (0,_utils__WEBPACK_IMPORTED_MODULE_1__/* .sanitizeFilename */ .Nz)(pureFilename);
+            const safeFilename = sanitizeFilename(pureFilename);
             // 判断是md文件还是资源文件
             if (pureFilename.endsWith('.md')) {
                 // MD文件保存到目标文件夹根目录
-                const safeTitle = (0,_utils__WEBPACK_IMPORTED_MODULE_1__/* .sanitizeFilename */ .Nz)(title);
+                const safeTitle = sanitizeFilename(title);
                 const mdFilename = `${safeTitle}.md`;
                 const mdFileHandle = await targetFolder.getFileHandle(mdFilename, {
                     create: true,
                 });
-                await writeFileContents(mdFileHandle, content);
+                const writable = await mdFileHandle.createWritable();
+                await writable.write(content);
+                await writable.close();
                 console.log(`已保存MD文件: ${mdFilename}`);
             }
             else {
@@ -1804,7 +1738,9 @@ async function unpackZipCommon(zip, title, targetFolder, assetsFolder = 'assets'
                 const fileHandle = await assetsDirHandle.getFileHandle(safeFilename, {
                     create: true,
                 });
-                await writeFileContents(fileHandle, content);
+                const writable = await fileHandle.createWritable();
+                await writable.write(content);
+                await writable.close();
                 console.log(`已保存资源文件: ${safeAssetsFolder}/${safeFilename}`);
             }
         }
@@ -1835,8 +1771,7 @@ const parser = (input) => {
         const token = input[i];
         switch (token.type) {
             case _tokenTypes__WEBPACK_IMPORTED_MODULE_0__/* .TokenType */ .k.Code: {
-                const code = token.content || "";
-                output.push(`\`\`\`${token.language ? token.language : ""}\n${code}${code.endsWith("\n") ? "" : "\n"}\`\`\``);
+                output.push(`\`\`\`${token.language ? token.language : ""}\n${token.content}${token.content.endsWith("\n") ? "" : "\n"}\`\`\``);
                 break;
             }
             case _tokenTypes__WEBPACK_IMPORTED_MODULE_0__/* .TokenType */ .k.UList: {
@@ -1848,11 +1783,11 @@ const parser = (input) => {
                 break;
             }
             case _tokenTypes__WEBPACK_IMPORTED_MODULE_0__/* .TokenType */ .k.H2: {
-                output.push(`## ${token.text || ""}`);
+                output.push(`## ${token.text}`);
                 break;
             }
             case _tokenTypes__WEBPACK_IMPORTED_MODULE_0__/* .TokenType */ .k.H3: {
-                output.push(`### ${token.text || ""}`);
+                output.push(`### ${token.text}`);
                 break;
             }
             case _tokenTypes__WEBPACK_IMPORTED_MODULE_0__/* .TokenType */ .k.Blockquote: {
@@ -1868,7 +1803,7 @@ const parser = (input) => {
                 break;
             }
             case _tokenTypes__WEBPACK_IMPORTED_MODULE_0__/* .TokenType */ .k.Link: {
-                output.push(`[${token.text || ""}](${token.href || ""})`);
+                output.push(`[${token.text}](${token.href})`);
                 break;
             }
             case _tokenTypes__WEBPACK_IMPORTED_MODULE_0__/* .TokenType */ .k.Figure:
@@ -1876,13 +1811,13 @@ const parser = (input) => {
                 // @ts-ignore
                 window.no_save_img && !token.local ?
                     output.push(`[图片]`) :
-                    output.push(`![](${token.local ? token.localSrc || token.src : token.src})`);
+                    output.push(`![](${token.local ? token.localSrc : token.src})`);
                 break;
             }
             case _tokenTypes__WEBPACK_IMPORTED_MODULE_0__/* .TokenType */ .k.Video: {
                 // 创建一个虚拟的 DOM 节点
                 const dom = document.createElement("video");
-                dom.setAttribute("src", token.local ? token.localSrc || token.src : token.src);
+                dom.setAttribute("src", token.local ? token.localSrc : token.src);
                 if (!token.local)
                     dom.setAttribute("data-info", "文件还未下载，随时可能失效，请使用`下载全文为Zip`将视频一同下载下来");
                 output.push(dom.outerHTML);
@@ -1890,23 +1825,19 @@ const parser = (input) => {
             }
             case _tokenTypes__WEBPACK_IMPORTED_MODULE_0__/* .TokenType */ .k.Table: {
                 //console.log(token)
-                const rows = Array.isArray(token.content) ? token.content : [];
-                if (!rows.length)
-                    break;
-                const cols = rows.reduce((max, row) => Math.max(max, row.length), 0);
-                if (!cols)
-                    break;
+                const rows = token.content;
+                const cols = rows[0].length;
                 const widths = new Array(cols).fill(0);
                 const res = [];
-                for (const row of rows) {
-                    for (let j = 0; j < cols; j++) {
-                        widths[j] = Math.max(widths[j], (row[j] || "").length);
+                for (let i in rows) {
+                    for (let j in rows[i]) {
+                        widths[j] = Math.max(widths[j], rows[i][j].length);
                     }
                 }
                 const renderRow = (row) => {
                     let res = "";
                     for (let i = 0; i < cols; i++) {
-                        res += `| ${(row[i] || "").padEnd(widths[i])} `;
+                        res += `| ${row[i].padEnd(widths[i])} `;
                     }
                     res += "|";
                     return res;
@@ -1929,7 +1860,7 @@ const parser = (input) => {
             }
             case _tokenTypes__WEBPACK_IMPORTED_MODULE_0__/* .TokenType */ .k.FootnoteList: {
                 // 渲染脚注定义列表
-                const footnotes = token.items.map(item => `[^${item.id}]: ${item.content || ""}`);
+                const footnotes = token.items.map(item => `[^${item.id}]: ${item.content}`);
                 output.push(footnotes.join("\n"));
                 break;
             }
@@ -2008,10 +1939,7 @@ __webpack_require__.d(__webpack_exports__, {
 var jszip_min = __webpack_require__(1);
 // EXTERNAL MODULE: ./src/core/tokenTypes.ts
 var tokenTypes = __webpack_require__(278);
-// EXTERNAL MODULE: ./src/core/utils.ts
-var utils = __webpack_require__(379);
 ;// ./src/core/download2zip.ts
-
 /**
  * 下载文件并将其添加到zip文件中
  * @param url 下载文件的URL
@@ -2020,38 +1948,9 @@ var utils = __webpack_require__(379);
  */
 async function downloadAndZip(url, zip) {
     const response = await fetch(url);
-    if (!response.ok) {
-        throw new Error(`HTTP ${response.status} while downloading ${url}`);
-    }
     const arrayBuffer = await response.arrayBuffer();
-    let fileName = "download";
-    try {
-        const base = typeof window !== "undefined" ? window.location.href : undefined;
-        const parsedUrl = new URL(url, base);
-        const rawName = parsedUrl.pathname.split("/").pop() || "download";
-        try {
-            fileName = decodeURIComponent(rawName);
-        }
-        catch {
-            fileName = rawName;
-        }
-    }
-    catch {
-        // Keep the fallback name for malformed or non-URL sources.
-    }
-    fileName = (0,utils/* sanitizeFilename */.Nz)(fileName);
-    if (/\.image$/i.test(fileName))
-        fileName += ".jpg";
-    // Different remote files frequently share a basename. JSZip overwrites an
-    // existing entry, so keep each downloaded asset addressable in the ZIP.
-    const originalName = fileName;
-    let suffix = 1;
-    while (zip.file(fileName)) {
-        const extensionIndex = originalName.lastIndexOf(".");
-        const stem = extensionIndex > 0 ? originalName.slice(0, extensionIndex) : originalName;
-        const extension = extensionIndex > 0 ? originalName.slice(extensionIndex) : "";
-        fileName = `${stem}-${suffix++}${extension}`;
-    }
+    let fileName = url.replace(/\?.*?$/g, "").split("/").pop();
+    fileName.endsWith('.image') ? fileName += '.jpg' : 0;
     // 添加到zip文件
     zip.file(fileName, arrayBuffer);
     return { zip, file_name: fileName };
@@ -2140,16 +2039,16 @@ const initStyles = () => {
       opacity: 0;
       transition: transform 0.3s ease;
     }
-    
+
     .toast-message.show {
       opacity: 1;
       animation: toast-float-in 0.5s ease forwards;
     }
-    
+
     .toast-message.hide {
       animation: toast-float-out 0.5s ease forwards;
     }
-    
+
     @keyframes toast-float-in {
       from {
         opacity: 0;
@@ -2158,7 +2057,7 @@ const initStyles = () => {
         opacity: 1;
       }
     }
-    
+
     @keyframes toast-float-out {
       from {
         opacity: 1;
@@ -2255,379 +2154,172 @@ var TokenType;
 (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-const textOf = (element) => element?.textContent?.trim() || "";
-const parseJsonObject = (value) => {
-    if (!value)
-        return null;
-    try {
-        const parsed = JSON.parse(value);
-        return parsed && typeof parsed === "object" ? parsed : null;
-    }
-    catch {
-        return null;
-    }
-};
-const parseMetric = (value) => {
-    if (typeof value === "number" && Number.isFinite(value))
-        return value;
-    const parsed = Number.parseInt(String(value ?? "").replace(/[,\u200B]/g, ""), 10);
-    return Number.isFinite(parsed) ? parsed : 0;
-};
-/**
- * Make a user- or page-provided name safe for a single filesystem path segment.
- * The same normalization is used for downloaded ZIP assets and direct files so
- * that Markdown links keep pointing at the actual saved names.
- */
-const sanitizeFilename = (filename) => {
-    if (typeof filename !== "string")
-        return "untitled";
-    let safe = filename
-        .replace(/[\x00-\x1f\x7f-\x9f]/g, "")
-        .replace(/[<>:"/\\|?*]/g, "-")
-        .replace(/[\u200B-\u200D\uFEFF]/g, "")
-        .replace(/\s+/g, " ")
-        .trim()
-        .replace(/\.{2,}/g, ".")
-        .replace(/^[.\s]+|[.\s]+$/g, "")
-        .slice(0, 200)
-        .replace(/[.\s]+$/g, "");
-    if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\..*)?$/i.test(safe)) {
-        safe = `_${safe}`;
-    }
-    return safe || "untitled";
-};
-/**
- * Converts a Zhihu link to a normal link.
- * @param link - The Zhihu link to convert.
- * @returns The converted normal link.
- */
 const ZhihuLink2NormalLink = (link) => {
-    if (!link)
-        return "";
     try {
-        const base = typeof window !== "undefined" ? window.location.href : undefined;
-        const url = new URL(link, base);
+        const url = new URL(link);
         if (url.hostname == "link.zhihu.com") {
-            const target = url.searchParams.get("target");
-            if (!target)
-                return link;
-            try {
-                return decodeURIComponent(target);
-            }
-            catch {
-                return target;
-            }
+            const target = new URLSearchParams(url.search).get("target");
+            return decodeURIComponent(target || "");
         }
-        return url.hash ? url.hash : link;
-    }
-    catch {
-        return link;
-    }
-};
-/**
- * Get the title of the dom.
- * @param dom - The dom to get title.
- * @returns The title of the dom.
- */
-const getTitle = (dom, scene, type) => {
-    let t = "";
-    if (scene == "follow" || scene == "people" || scene == "collection" || scene == "pin") {
-        const contentItem = dom.closest('.ContentItem');
-        let title_dom = contentItem?.querySelector("h2.ContentItem-title a");
-        if (type == "answer" || type == "article") {
-            //搜索结果页最新讨论
-            title_dom = title_dom || dom.closest('.HotLanding-contentItem')?.querySelector("h2.ContentItem-title a");
-            t = textOf(title_dom);
-        }
-        else { //想法
-            if (title_dom) {
-                t = "想法：" + textOf(title_dom) + '-' + (dom.innerText || "").slice(0, 16).trim().replace(/\s/g, "");
-            }
-            else
-                t = "想法：" + (dom.innerText || "").slice(0, 24).trim().replace(/\s/g, "");
-        }
-    }
-    //问题/回答
-    else if (scene == "question" || scene == "answer") {
-        t = dom.closest('.QuestionPage')?.querySelector("meta[itemprop=name]")?.content || "";
-    }
-    //文章
-    else if (scene == "article") {
-        t = textOf(dom.closest('.Post-Main')?.querySelector("h1.Post-Title"));
-    }
-    else
-        t = "无标题";
-    t = t.trim() || "无标题";
-    //替换英文问号为中文问号，因标题中间也可能有问号所以不去掉
-    return sanitizeFilename(t.replace(/\?/g, "？"));
-};
-/**
- * Get the author of the dom.
- * @param dom - The dom to get author.
- * @returns The author of the dom.
- */
-const getAuthor = (dom, scene, type) => {
-    let author_dom = null;
-    //寻找包含昵称+链接+签名的节点
-    if (scene == "follow") {
-        let p = dom.closest('.ContentItem');
-        //唯独关注页作者在ContentItem外面，原创内容没有作者栏
-        author_dom = p?.querySelector(".AuthorInfo-content") ||
-            dom.closest('.Feed')?.querySelector(".FeedSource .AuthorInfo-content") ||
-            dom.closest('.Feed')?.querySelector(".FeedSource-firstline") || null;
-    }
-    ///个人/问题/回答/想法/收藏夹
-    else if (scene == "people" || scene == "question" || scene == "answer" || scene == "pin" || scene == "collection") {
-        let p = dom.closest('.ContentItem');
-        author_dom = p?.querySelector(".AuthorInfo-content") || null;
-        // 个人页的搜索结果的想法没有作者栏
-        if (!author_dom && location.href.includes('search')) {
-            author_dom = document.querySelector('.ProfileHeader-title');
-            const profileChildren = author_dom?.children;
-            const profileUrl = location.href.match(/(https.*)\/search/)?.[1] || location.href;
-            return {
-                name: textOf(profileChildren?.[0]),
-                url: profileUrl,
-                badge: textOf(profileChildren?.[1])
-            };
-        }
-    }
-    //文章
-    else if (scene == "article") {
-        author_dom = dom.closest('.Post-Main')?.querySelector(".Post-Author") || null;
-    }
-    if (author_dom) {
-        const authorName_dom = author_dom.querySelector(".AuthorInfo-name .UserLink-link") ||
-            author_dom.querySelector(".UserLink-link") ||
-            author_dom.querySelector(".UserLink.AuthorInfo-name"); //匿名用户
-        const authorBadge_dom = author_dom.querySelector(".AuthorInfo-badge");
-        //console.log("authorName_dom", authorName_dom)
-        return {
-            name: authorName_dom?.innerText?.trim() || authorName_dom?.textContent?.trim() ||
-                authorName_dom?.children[0]?.getAttribute("alt") || "匿名用户",
-            url: authorName_dom?.href || authorName_dom?.getAttribute("href") || "",
-            badge: authorBadge_dom?.innerText?.trim() || authorBadge_dom?.textContent?.trim() || ""
-        };
-    }
-    console.error("未找到author_dom");
-    return { name: "匿名用户", url: "", badge: "" };
-};
-/**
- * Get the URL of the dom.
- * 应该按每个内容获取URL，而非目前网址
- * @param dom - The dom to get URL.
- * @returns The URL of the dom.
- */
-const getURL = (dom, scene, type) => {
-    const currentUrl = window.location.href.split("?")[0];
-    //文章/想法/回答
-    if (scene == "article" || scene == "pin" || scene == "answer") {
-        return currentUrl;
-    }
-    //关注/个人/问题/等
-    // if (scene == "follow" || scene == "people" || scene == "question")
-    else {
-        if (type == "answer" || type == "article") {
-            //普通
-            let p = dom.closest('.ContentItem');
-            let url_dom = p?.querySelector(".ContentItem>meta[itemprop=url]") || null;
-            //搜索结果页
-            if (!url_dom) {
-                url_dom = p?.querySelector(".ContentItem h2 a") || null;
-            }
-            //搜索结果页最新讨论
-            if (!url_dom) {
-                p = dom.closest('.HotLanding-contentItem');
-                url_dom = p?.querySelector(".ContentItem h2 a") || null;
-            }
-            const rawUrl = url_dom?.content || url_dom?.href;
-            if (!rawUrl)
-                return currentUrl;
-            try {
-                return new URL(rawUrl, window.location.href).href;
-            }
-            catch {
-                return rawUrl;
-            }
-        }
-        //pin
         else {
-            const zopdata = parseJsonObject(dom.closest('.ContentItem')?.getAttribute("data-zop"));
-            return zopdata?.itemId ? "https://www.zhihu.com/pin/" + zopdata.itemId : currentUrl;
-        }
-    }
-};
-/**
- *
- * 时间：
- * 使用内容下显示的时间
- *
- */
-const getTime = async (dom, scene, type) => {
-    //关注/个人/问题/回答页
-    //if (scene == "follow" || scene == "people" || scene == "question" || scene == "answer") {//收藏夹
-    //  if (type != "" || type == "article") {
-    const stripTimePrefix = (value) => value.replace(/^发布于\s*/, "").trim();
-    if (scene != "article") {
-        const timeDom = dom.closest('.ContentItem')?.querySelector(".ContentItem-time");
-        const link = timeDom?.querySelector("a");
-        const tooltip = link?.getAttribute("data-tooltip") || "";
-        const visible = link?.innerText || link?.textContent || "";
-        return {
-            created: stripTimePrefix(tooltip),
-            modified: stripTimePrefix(visible)
-        };
-    }
-    else { //文章
-        const timeDom = dom.closest('.Post-content')?.querySelector(".ContentItem-time");
-        if (!timeDom)
-            return { created: "", modified: "" };
-        const readTime = () => stripTimePrefix(timeDom.childNodes[0]?.textContent || timeDom.textContent || "");
-        const modified = readTime();
-        let toggled = false;
-        try {
-            timeDom.click();
-            toggled = true;
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-            return { created: readTime(), modified };
-        }
-        catch {
-            return { created: modified, modified };
-        }
-        finally {
-            if (toggled)
-                timeDom.click();
-        }
-    }
-    //  }
-    //}
-};
-const getUpvote = (dom, scene, type) => {
-    //关注/个人/问题/回答页
-    //if (scene == "follow" || scene == "people" || scene == "question" || scene == "answer") {//收藏夹
-    //up_dom = (getParent(dom, "ContentItem") as HTMLElement).querySelector(".VoteButton--up") as HTMLElement//\n赞同 5.6 万
-    let upvote = 0;
-    if (type == "pin") {
-        //个人页的想法有2层ContentItem-actions，想法页有1层
-        const contentItem = dom.closest('.ContentItem');
-        const actionGroup = contentItem?.querySelector(".ContentItem-actions>.ContentItem-actions") ||
-            contentItem?.querySelector(".ContentItem-actions");
-        const action = actionGroup?.childNodes[0];
-        upvote = action?.textContent?.replace(/,|\u200B/g, '').slice(3) || 0; //0, -4
-    }
-    else if (scene == "article") {
-        const action = dom.closest('.Post-content')?.querySelector(".ContentItem-actions .VoteButton");
-        upvote = action?.textContent?.replace(/,|\u200B/g, '').slice(3) || 0;
-    }
-    else {
-        const contentItem = dom.closest('.ContentItem');
-        //搜索结果页
-        if (window.location.href.includes('/search?')) {
-            const label = dom.closest('.RichContent')?.querySelector(".ContentItem-actions .VoteButton")?.getAttribute('aria-label') || "";
-            upvote = label.slice(3);
-        }
-        else
-            upvote = parseJsonObject(contentItem?.getAttribute("data-za-extra-module"))?.card?.content?.upvote_num || 0;
-    }
-    return parseMetric(upvote);
-    //  }
-    //}
-};
-const getCommentNum = (dom, scene, type) => {
-    //关注/个人/问题/回答页
-    //if (scene == "follow" || scene == "people" || scene == "question" || scene == "answer") {//收藏夹
-    let cm = 0;
-    let cm_dom = null;
-    //被展开的评论区
-    const p = dom.closest('.ContentItem');
-    cm_dom = p?.querySelector(".css-1k10w8f") || null;
-    if (cm_dom) {
-        cm = cm_dom.textContent?.replace(/,|\u200B/g, "").slice(0, -4) || 0;
-    }
-    else if (type == "pin") {
-        const contentItem = dom.closest('.ContentItem');
-        const actionGroup = contentItem?.querySelector(".ContentItem-actions>.ContentItem-actions") ||
-            contentItem?.querySelector(".ContentItem-actions");
-        cm_dom = actionGroup?.childNodes[1];
-        cm = cm_dom?.textContent?.replace(/,|\u200B/g, "").slice(0, -4) || 0;
-    }
-    else if (scene == "article") {
-        cm_dom = dom.closest('.Post-content')?.querySelector(".BottomActions-CommentBtn") || null;
-        cm = cm_dom?.textContent?.replace(/,|\u200B/g, '').slice(0, -4) || 0;
-    }
-    else {
-        const contentItem = dom.closest('.ContentItem');
-        //搜索结果页
-        if (window.location.href.includes('/search?')) {
-            cm_dom = dom.closest('.RichContent')?.querySelector("button.ContentItem-action") || null;
-            cm = cm_dom?.textContent?.replace(/,|\u200B/g, "").slice(0, -4) || 0;
-        }
-        else
-            cm = parseJsonObject(contentItem?.getAttribute("data-za-extra-module"))?.card?.content?.comment_num || 0;
-    }
-    return parseMetric(cm);
-    //  }
-    //}
-};
-const getRemark = (dom) => {
-    let remark = "", p = dom.closest('.ContentItem'); //文章页没有，remark = remark.replace(/\/|\\|<|>|"|\*|\?|\||\:/g, "-")
-    if (!p)
-        p = dom.closest('.PinItem');
-    if (!p)
-        p = dom.closest('.Post-content');
-    const input = p?.querySelector("textarea.to-remark");
-    if (input)
-        remark = input.value.replace(/\s/g, "-");
-    if (remark.match(/\/|\\|<|>|"|\*|\?|\||\:/g))
-        return "非法备注";
-    return remark;
-};
-/**
- * 获取是否需要保存评论，用于截图，zip
- */
-const getCommentSwitch = (dom) => {
-    let p = dom.closest('.ContentItem');
-    if (!p)
-        p = dom.closest('.PinItem');
-    if (!p)
-        p = dom.closest('.Post-content');
-    return p?.querySelector("input.to-cm")?.checked || false;
-};
-/**
- * Get the Location of the dom.
- * @param dom - The dom.
- * @returns string | null
- */
-const getLocation = (dom, scene, type) => {
-    let location = null, el = dom.closest('.ContentItem'); //想法类型、文章页没有
-    if (!el)
-        el = dom.closest('.PinItem');
-    if (!el)
-        el = dom.closest('.Post-content');
-    try {
-        if (el) {
-            const time = el.querySelector('.ContentItem-time');
-            location = time?.childNodes[1]?.textContent?.slice(6) || null;
-        }
-        if (!location && scene == "people") {
-            const profileName = document.querySelector('.ProfileHeader-name');
-            const name = profileName?.childNodes[0]?.textContent || "";
-            if (name == getAuthor(dom, scene, type).name) {
-                location = document.querySelector('.css-1xfvezd')?.textContent?.slice(5) || null;
-            }
+            if (link.match(/#/))
+                return '#' + link.split('#')[1];
+            else
+                return link;
         }
     }
     catch (e) {
-        console.error('保存location出错', e);
+        return link;
     }
-    return location;
+};
+const getTitle = (dom, scene, type) => {
+    try {
+        // 1. Check Answer/Article Item in Feed/Lists/Collections (prioritize card title over page title)
+        const item = dom.closest('.AnswerItem') || dom.closest('.ArticleItem') || dom.closest('.ContentItem') || dom.closest('.Card') || dom.closest('.List-item');
+        if (item) {
+            const titleEl = item.querySelector('h2.ContentItem-title a, .ContentItem-title a, h2.ContentItem-title, .ContentItem-title, a.QuestionItem-title, a[data-za-detail-view-element_name="Title"], h2 a, h2');
+            if (titleEl && titleEl.innerText && titleEl.innerText.trim()) {
+                return titleEl.innerText.trim().replace(/\?/g, "？").replace(/\/|\\|<|>|"|\*|\||\:/g, "-");
+            }
+        }
+        // 2. Check Question Page (Answer pages like /question/123/answer/456)
+        const qPage = dom.closest('.QuestionPage') || document.querySelector('.QuestionPage');
+        if (qPage) {
+            const metaName = qPage.querySelector('meta[itemprop=name]');
+            if (metaName && metaName.content && metaName.content.trim()) {
+                return metaName.content.trim().replace(/\?/g, "？").replace(/\/|\\|<|>|"|\*|\||\:/g, "-");
+            }
+            const qTitle = qPage.querySelector('.QuestionHeader-title, h1.QuestionHeader-title');
+            if (qTitle && qTitle.innerText && qTitle.innerText.trim()) {
+                return qTitle.innerText.trim().replace(/\?/g, "？").replace(/\/|\\|<|>|"|\*|\||\:/g, "-");
+            }
+        }
+        // 3. Check Zhuanlan Post/Article
+        const postMain = dom.closest('.Post-Main') || document.querySelector('.Post-Main');
+        if (postMain) {
+            const postTitle = postMain.querySelector('h1.Post-Title, .Post-Title, h1');
+            if (postTitle && postTitle.innerText && postTitle.innerText.trim()) {
+                return postTitle.innerText.trim().replace(/\?/g, "？").replace(/\/|\\|<|>|"|\*|\||\:/g, "-");
+            }
+        }
+        // 4. Global Meta & H1 Fallback
+        const globalMeta = document.querySelector('meta[itemprop=name]');
+        if (globalMeta && globalMeta.content && globalMeta.content.trim()) {
+            return globalMeta.content.trim().replace(/\?/g, "？").replace(/\/|\\|<|>|"|\*|\||\:/g, "-");
+        }
+        const globalH1 = document.querySelector('h1.QuestionHeader-title, h1.Post-Title, h1');
+        if (globalH1 && globalH1.innerText && globalH1.innerText.trim()) {
+            return globalH1.innerText.trim().replace(/\?/g, "？").replace(/\/|\\|<|>|"|\*|\||\:/g, "-");
+        }
+        // 5. Document title fallback
+        if (typeof document !== "undefined" && document.title) {
+            const cleanTitle = document.title.replace(/\s*[-_]\s*(?:知乎|Zhihu).*/i, "").trim();
+            if (cleanTitle) {
+                return cleanTitle.replace(/\?/g, "？").replace(/\/|\\|<|>|"|\*|\||\:/g, "-");
+            }
+        }
+    }
+    catch (e) { }
+    return "无标题";
+};
+const getAuthor = (dom, scene, type) => {
+    try {
+        let item = dom.closest('.ContentItem') || dom.closest('.Post-Main') || dom.closest('.PinItem') || dom;
+        if (item) {
+            let authorName_dom = item.querySelector(".AuthorInfo-name .UserLink-link, .UserLink-link, .AuthorInfo-name");
+            let authorBadge_dom = item.querySelector(".AuthorInfo-badge, .AuthorInfo-badgeText");
+            if (authorName_dom) {
+                let href = authorName_dom.href || "";
+                let name = authorName_dom.innerText || (authorName_dom.children[0] ? authorName_dom.children[0].getAttribute("alt") || "" : "");
+                return {
+                    name: name.trim() || "匿名用户",
+                    url: href,
+                    badge: authorBadge_dom ? authorBadge_dom.innerText.trim() : ""
+                };
+            }
+        }
+    }
+    catch (e) { }
+    return { name: "匿名用户", url: "", badge: "" };
+};
+const getURL = (dom, scene, type) => {
+    try {
+        if (window.location.pathname === "/") {
+            let item = dom.closest('.ContentItem') || dom.closest('.AnswerItem') || dom.closest('.ArticleItem');
+            if (item) {
+                let a = item.querySelector("a[data-za-detail-view-id]");
+                if (a && a.href)
+                    return a.href;
+            }
+        }
+    }
+    catch (e) { }
+    return window.location.origin + window.location.pathname;
+};
+const getTime = async (dom, scene) => {
+    try {
+        let item = dom.closest('.ContentItem') || dom.closest('.Post-content') || dom.closest('.PinItem') || dom;
+        let timeEl = item.querySelector('.ContentItem-time, .Post-Time, .PinItem-time, .ContentItem-status');
+        if (timeEl) {
+            let text = timeEl.innerText.replace(/\s+/g, ' ').trim();
+            return { created: text, modified: text };
+        }
+    }
+    catch (e) { }
+    return { created: "", modified: "" };
+};
+const getUpvote = (dom, scene, type) => {
+    try {
+        let item = dom.closest('.ContentItem') || dom.closest('.Post-content') || dom.closest('.PinItem') || dom;
+        let up = item.querySelector('.VoteButton--up, .AnswerItem-extraInfo, button[aria-label*="赞同"]');
+        if (up)
+            return up.innerText.replace(/\s+/g, ' ').trim();
+    }
+    catch (e) { }
+    return "";
+};
+const getCommentNum = (dom, scene, type) => {
+    try {
+        let item = dom.closest('.ContentItem') || dom.closest('.Post-content') || dom;
+        let btn = item.querySelector('.ContentItem-actions button:has(.Zi--comment)');
+        if (btn)
+            return btn.textContent || "";
+    }
+    catch (e) { }
+    return "";
+};
+const getRemark = (dom) => {
+    try {
+        let wrap = dom.closest('.zhihubackup-wrap') || dom.closest('.zhcollect-minimal-btns');
+        if (wrap) {
+            let ta = wrap.querySelector('.to-remark');
+            if (ta)
+                return ta.value;
+        }
+    }
+    catch (e) { }
+    return "";
+};
+const getCommentSwitch = (dom) => {
+    try {
+        let wrap = dom.closest('.zhihubackup-wrap');
+        if (wrap) {
+            let cb = wrap.querySelector('.to-cm');
+            if (cb)
+                return cb.checked;
+        }
+    }
+    catch (e) { }
+    return false;
+};
+const getLocation = (dom, scene, type) => {
+    return "";
 };
 
 /* harmony export */ __webpack_require__.d(__webpack_exports__, [
 /* harmony export */   "AP", 0, /* binding */ getURL,
 /* harmony export */   "IQ", 0, /* binding */ ZhihuLink2NormalLink,
 /* harmony export */   "LK", 0, /* binding */ getTitle,
-/* harmony export */   "Nz", 0, /* binding */ sanitizeFilename,
 /* harmony export */   "P_", 0, /* binding */ getRemark,
 /* harmony export */   "UR", 0, /* binding */ getCommentNum,
 /* harmony export */   "WB", 0, /* binding */ getTime,
@@ -2644,6 +2336,7 @@ const getLocation = (dom, scene, type) => {
 (__unused_webpack_module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* unused harmony export getHeaderMarkdown */
 /* harmony import */ var _core_lexer__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(236);
 /* harmony import */ var _core_tokenTypes__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(278);
 /* harmony import */ var _core_parser__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(135);
@@ -2662,7 +2355,7 @@ const getLocation = (dom, scene, type) => {
 
 function detectScene() {
     const pathname = location.pathname;
-    let scene = null;
+    let scene;
     if (pathname == "/follow")
         scene = "follow";
     else if (pathname.includes("/people") || pathname.includes("/org"))
@@ -2689,50 +2382,52 @@ function detectScene() {
     return scene;
 }
 function detectType(dom, bt, ev) {
-    //ContentItem
-    let type;
     if (dom.closest('.AnswerItem'))
-        type = "answer";
-    else if (dom.closest('.ArticleItem'))
-        type = "article";
-    else if (dom.closest('.Post-content'))
-        type = "article";
-    else if (dom.closest('.PinItem'))
-        type = "pin";
-    else {
-        console.log("未知内容");
-        if (!ev) {
-            alert('请勿收起又展开内容，否则会保存失败。请手动重新保存。');
-        }
-        else {
-            const target = ev.target instanceof Element ? ev.target : null;
-            const zhw = target?.closest('.zhihubackup-wrap');
-            const textarea = zhw?.querySelector('textarea');
-            const fa = zhw?.closest('.ContentItem') || zhw?.closest('.Post-content') || zhw?.closest('.HotLanding-contentItem');
-            if (!fa || !textarea || !bt) {
-                alert('请勿收起又展开内容，否则会保存失败。请重新保存。');
-            }
-            else {
-                const backup = textarea.value;
-                setTimeout(() => {
-                    const currentTextarea = fa.querySelector('textarea');
-                    if (currentTextarea)
-                        currentTextarea.value = backup;
-                }, 200);
-                setTimeout(() => {
-                    const button = fa.querySelector(`.to-${bt}`);
-                    button?.click();
-                }, 250);
-            }
-        }
-        document.querySelectorAll('.zhihubackup-wrap').forEach((w) => w.remove());
-        // @ts-ignore
-        if (typeof window.zhbf === "function")
-            setTimeout(window.zhbf, 100);
-        return;
-    }
-    return type;
+        return "answer";
+    if (dom.closest('.ArticleItem') || dom.closest('.Post-content') || dom.closest('.Post-Main'))
+        return "article";
+    if (dom.closest('.PinItem'))
+        return "pin";
+    if (dom.closest('.ContentItem'))
+        return "answer";
+    return "answer";
 }
+const getHeaderMarkdown = (dom, scene, type) => {
+    const title = (0,_core_utils__WEBPACK_IMPORTED_MODULE_3__/* .getTitle */ .LK)(dom, scene, type);
+    const url = (0,_core_utils__WEBPACK_IMPORTED_MODULE_3__/* .getURL */ .AP)(dom, scene, type);
+    const author = (0,_core_utils__WEBPACK_IMPORTED_MODULE_3__/* .getAuthor */ .kn)(dom, scene, type);
+    const upvote = (0,_core_utils__WEBPACK_IMPORTED_MODULE_3__/* .getUpvote */ .aJ)(dom, scene, type);
+    let item = dom.closest('.ContentItem') || dom.closest('.Post-content') || dom.closest('.PinItem') || dom;
+    let timeText = "";
+    if (item) {
+        let timeEl = item.querySelector('.ContentItem-time, .Post-Time, .PinItem-time, .ContentItem-status');
+        if (timeEl)
+            timeText = timeEl.innerText.replace(/\s+/g, ' ').trim();
+    }
+    let lines = [];
+    if (title && title !== "无标题") {
+        lines.push(`# ${title}\n`);
+    }
+    if (url && !url.includes("#WARNING")) {
+        lines.push(`> **原文链接**：[${url}](${url})`);
+    }
+    if (author && author.name) {
+        let authorStr = author.url ? `[${author.name}](${author.url})` : author.name;
+        if (author.badge)
+            authorStr += ` (${author.badge})`;
+        lines.push(`> **作者**：${authorStr}`);
+    }
+    if (timeText) {
+        lines.push(`> **时间**：${timeText}`);
+    }
+    if (upvote) {
+        lines.push(`> **赞同数**：${upvote}`);
+    }
+    if (lines.length > 0) {
+        return lines.join("\n") + "\n\n---\n\n";
+    }
+    return "";
+};
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (async (dom, button, event) => {
     //console.log(dom)
     //确认场景
@@ -2795,59 +2490,51 @@ function detectType(dom, bt, ev) {
      * 标题，链接，作者名，赞数，评论数，创建时间，修改时间
      * (author.badge ? ('\nauthor_badge: ' + author.badge) : '')
      */
-    const yamlScalar = (value) => JSON.stringify(String(value ?? ""));
-    const yamlNumber = (value) => {
-        const number = typeof value === "number" ? value : Number(value);
-        return Number.isFinite(number) ? String(number) : "0";
+    const getFrontmatter = () => {
+        let fm = '---'
+            + '\ntitle: ' + title
+            + '\nurl: ' + url
+            + '\nauthor: ' + author.name
+            + '\nauthor_badge: ' + author.badge
+            + `${Location ? '\nlocation: ' + Location : ''}`
+            + '\ncreated: ' + time.created
+            + '\nmodified: ' + time.modified
+            + '\nupvote_num: ' + upvote_num
+            + '\ncomment_num: ' + comment_num
+            + '\n---\n';
+        return fm;
     };
-    const getFrontmatter = () => [
-        '---',
-        `title: ${yamlScalar(title)}`,
-        `url: ${yamlScalar(url)}`,
-        `author: ${yamlScalar(author.name)}`,
-        `author_badge: ${yamlScalar(author.badge || "")}`,
-        ...(Location ? [`location: ${yamlScalar(Location)}`] : []),
-        `created: ${yamlScalar(time.created)}`,
-        `modified: ${yamlScalar(time.modified)}`,
-        `upvote_num: ${yamlNumber(upvote_num)}`,
-        `comment_num: ${yamlNumber(comment_num)}`,
-        '---',
-        ''
-    ].join('\n');
     /**
      * 生成文件名
      */
     function getFilename() {
-        let fm = title + "_" + author.name + "_" + (time.modified || "").slice(0, 10) + remark;
+        let fm = title + "_" + author.name + "_" + time.modified.slice(0, 10) + remark;
         try {
             // @ts-ignore
             var efm = GM_getValue("edit_Filename");
             if (efm) {
-                const evaluated = eval(efm);
-                if (typeof evaluated === "string" && evaluated.trim())
-                    fm = evaluated;
+                fm = eval(efm);
             }
         }
         catch (e) {
             console.warn(e);
         }
-        return (0,_core_utils__WEBPACK_IMPORTED_MODULE_3__/* .sanitizeFilename */ .Nz)(fm);
+        return fm;
     }
     /**
      * 生成目录
      */
     const TOC = (() => {
-        const tocParent = dom.closest('.ContentItem') || dom.closest('.Post-content');
-        const toc = tocParent?.querySelector(".Catalog-content");
+        let toc = (dom.closest('.ContentItem') || dom.closest('.Post-content'))?.querySelector(".Catalog-content");
         let items = [];
         if (toc) {
             let i = 1, j = 1;
             toc.childNodes.forEach((e) => {
-                if (e instanceof Element && e.classList.contains('Catalog-FirstLevelTitle')) {
-                    items.push(i++ + '. ' + (e.textContent || ""));
+                if (e.classList.contains('Catalog-FirstLevelTitle')) {
+                    items.push(i++ + '. ' + e.textContent);
                     j = 1;
                 }
-                else if (e instanceof Element && e.textContent) {
+                else {
                     items.push('    ' + j++ + '. ' + e.textContent);
                 }
             });
@@ -2872,67 +2559,55 @@ function detectType(dom, bt, ev) {
             });
     }
     //是转发的想法，对源想法解析，并准备附加到新想法下面
-    const pinItem = dom.closest('.PinItem');
-    const originPin = pinItem?.querySelector(".PinItem-content-originpin");
-    if (type == "pin" && originPin) {
-        const dom2 = originPin.querySelector(".RichText");
-        if (dom2) {
-            const lex2 = (0,_core_lexer__WEBPACK_IMPORTED_MODULE_0__/* .lexer */ .l)(dom2.childNodes, type);
-            //markdown = markdown.concat(parser(lex2).map((l) => "> " + l))
-            originPinMD.push('\n\n' + (0,_core_parser__WEBPACK_IMPORTED_MODULE_2__/* .parser */ .K)(lex2).map((l) => "> " + l).join("\n> \n"));
-        }
+    if (type == "pin" && dom.closest('.PinItem')?.querySelector(".PinItem-content-originpin")) {
+        const dom2 = dom.closest('.PinItem')?.querySelector(".PinItem-content-originpin .RichText");
+        const lex2 = (0,_core_lexer__WEBPACK_IMPORTED_MODULE_0__/* .lexer */ .l)(dom2.childNodes, type);
+        //markdown = markdown.concat(parser(lex2).map((l) => "> " + l))
+        originPinMD.push('\n\n' + (0,_core_parser__WEBPACK_IMPORTED_MODULE_2__/* .parser */ .K)(lex2).map((l) => "> " + l).join("\n> \n"));
     }
     // 获取想法图片/标题
     if (type == "pin") {
-        const pinTitle = pinItem?.querySelector(".ContentItem-title");
-        if (pinTitle)
+        const pinItem = dom.closest('.PinItem');
+        if (pinItem?.querySelector(".ContentItem-title"))
             lex.unshift({
                 type: _core_tokenTypes__WEBPACK_IMPORTED_MODULE_1__/* .TokenType */ .k.Text,
                 content: [{
                         type: _core_tokenTypes__WEBPACK_IMPORTED_MODULE_1__/* .TokenType */ .k.PlainText,
-                        text: '**' + (pinTitle.textContent || "") + '**'
+                        text: '**' + (pinItem.querySelector(".ContentItem-title")?.textContent || '') + '**'
                     }]
             });
         if (pinItem?.querySelector(".PinItem-remainContentRichText")) {
-            const imgs = pinItem.querySelectorAll(".PinItem-remainContentRichText img");
+            const imgs = pinItem?.querySelectorAll(".PinItem-remainContentRichText img") || [];
             imgs.forEach((img) => {
-                const src = img.getAttribute("data-original") || img.getAttribute("data-actualsrc");
-                if (!src)
-                    return;
                 lex.push({
                     type: _core_tokenTypes__WEBPACK_IMPORTED_MODULE_1__/* .TokenType */ .k.Figure,
-                    src,
-                    local: false,
+                    src: img.getAttribute("data-original") || img.getAttribute("data-actualsrc"),
                 });
             });
         }
     }
     //解析评论
-    let commentText = '';
-    let commentsImgs = [];
+    let commentText = '', commentsImgs = [];
     const dealComments = async () => {
         try {
             if ((0,_core_utils__WEBPACK_IMPORTED_MODULE_3__/* .getCommentSwitch */ .mK)(dom)) {
-                const p = dom.closest('.ContentItem') || dom.closest('.Post-content');
-                const openComment = p?.querySelector(".Comments-container");
-                const itemId = `${type}${url.split('/').filter(Boolean).pop() || ""}`;
-                if (!p || !itemId)
-                    return;
+                let p = dom.closest('.ContentItem') || dom.closest('.Post-content');
+                let openComment = p?.querySelector(".Comments-container");
+                let itemId = type + url.split('/').pop();
                 let tip = '';
-                const closedMessage = openComment?.querySelector('.css-189h5o3');
-                if (closedMessage) {
-                    let t = '**' + (closedMessage.textContent || "") + '**'; //评论区已关闭|暂无评论
-                    if (button == 'text' || button == 'copy')
+                if (openComment && openComment?.querySelector('.css-189h5o3')) {
+                    let t = '**' + (openComment.querySelector('.css-189h5o3')?.textContent || '') + '**'; //评论区已关闭|暂无评论
+                    if (button == 'text')
                         commentText = t;
-                    else if (button == 'zip')
-                        zip?.file("comments.md", t);
+                    else
+                        zip.file("comments.md", t);
                 }
                 else {
-                    if (openComment && openComment.querySelector('.css-1tdhe7b'))
+                    if (openComment && openComment?.querySelector('.css-1tdhe7b'))
                         tip = '**评论内容由作者筛选后展示**\n\n';
-                    // @ts-ignore 
-                    const commentsData = window.ArticleComments?.[itemId]?.comments;
-                    if (!(commentsData instanceof Map)) {
+                    // @ts-ignore
+                    let commentsData = window.ArticleComments[itemId]?.comments;
+                    if (!commentsData) {
                         if (!openComment)
                             return; //既没评论数据也没展开评论区
                         let s = confirm('您还未暂存任何评论，却展开了评论区，是否立即【暂存此页评论并保存】？【否】则什么也不做\n（若不想存评，请收起评论区或取消勾选框）');
@@ -2946,20 +2621,14 @@ function detectType(dom, bt, ev) {
                             return 'return';
                         }
                         else {
-                            const saveButton = openComment.querySelector('.save');
-                            if (!saveButton) {
-                                (0,_core_toast__WEBPACK_IMPORTED_MODULE_6__/* .showToast */ .P)('❌ 找不到评论暂存按钮');
-                                return 'return';
-                            }
-                            saveButton.click();
+                            openComment.querySelector('.save').click();
                             setTimeout(() => {
                                 if (display == "block") {
                                     (0,_core_toast__WEBPACK_IMPORTED_MODULE_6__/* .showToast */ .P)('❎ 取消保存');
                                     (0,_core_obsidianSaver__WEBPACK_IMPORTED_MODULE_7__/* .hideObsidianModal */ .XR)();
                                     return alert('已【暂存此页评论】，由于这次是自定义文件夹保存，请再次手动保存文件。');
                                 }
-                                const retryButton = p.querySelector(`.zhihubackup-wrap .to-${button}`);
-                                retryButton?.click();
+                                p?.querySelector(`.zhihubackup-wrap .to-${button}, .zhcollect-minimal-btns .to-${button}`)?.click();
                             }, 1900);
                             return 'return';
                         }
@@ -2974,26 +2643,12 @@ function detectType(dom, bt, ev) {
                         [commentText, commentsImgs] = (0,_core_renderComments__WEBPACK_IMPORTED_MODULE_5__/* .renderAllComments */ .Y)(commentsData, true);
                         commentText = num_text + commentText;
                         if (commentsImgs.length) {
-                            const assetsFolder = zip?.folder('assets');
-                            if (!assetsFolder)
-                                throw new Error('无法创建评论资源目录');
-                            const failedImages = [];
-                            for (const image of commentsImgs) {
-                                try {
-                                    const response = await fetch(image.url);
-                                    if (!response.ok)
-                                        throw new Error(`HTTP ${response.status}`);
-                                    const arrayBuffer = await response.arrayBuffer();
-                                    assetsFolder.file(image.fileName, arrayBuffer);
-                                }
-                                catch (error) {
-                                    console.warn('评论图片下载失败:', image.url, error);
-                                    failedImages.push(image);
-                                }
-                            }
-                            // 下载失败时保留远程链接，避免 Markdown 指向不存在的本地文件。
-                            for (const image of failedImages) {
-                                commentText = commentText.split(`./assets/${image.fileName}`).join(image.url);
+                            const assetsFolder = zip.folder('assets');
+                            for (let i = 0; i < commentsImgs.length; i++) {
+                                const response = await fetch(commentsImgs[i]);
+                                const arrayBuffer = await response.arrayBuffer();
+                                const fileName = commentsImgs[i].replace(/\?.*?$/, "").split("/").pop();
+                                assetsFolder.file(fileName, arrayBuffer);
                             }
                         }
                     }
@@ -3005,10 +2660,18 @@ function detectType(dom, bt, ev) {
             alert('主要工作已完成，但是评论保存出错了');
         }
     };
-    if (button == 'copy') {
+    if (button == 'copy' || button == 'copy_context' || button == 'copy_content') {
+        let includeContext = button == 'copy_context';
+        if (button == 'copy' || button == 'copy_context' || button == 'copy_content') {
+            try {
+                // @ts-ignore
+                includeContext = GM_getValue("copy_save_title", true);
+            }
+            catch (e) { }
+        }
         try {
             // @ts-ignore
-            var copy_save_fm = GM_getValue("copy_save_fm"), 
+            var copy_save_fm = GM_getValue("copy_save_fm"),
             // @ts-ignore
             copy_save_cm = GM_getValue("copy_save_cm");
         }
@@ -3016,7 +2679,7 @@ function detectType(dom, bt, ev) {
             console.warn(e);
         }
         md = TOC ? TOC.concat((0,_core_parser__WEBPACK_IMPORTED_MODULE_2__/* .parser */ .K)(lex)) : (0,_core_parser__WEBPACK_IMPORTED_MODULE_2__/* .parser */ .K)(lex);
-        if (type == "pin" && originPin) {
+        if (type == "pin" && dom.closest('.PinItem')?.querySelector(".PinItem-content-originpin")) {
             md = md.concat(originPinMD); //解决保存转发的想法异常
         }
         if (copy_save_fm) {
@@ -3026,13 +2689,19 @@ function detectType(dom, bt, ev) {
             if (await dealComments() == 'return')
                 return;
             commentText ? commentText = '\n\n---\n\n## 评论\n\n' + commentText : 0;
-            if (commentText)
-                md.push(commentText);
+            md.push(commentText);
         }
-        if (type != 'pin' && !copy_save_fm)
-            return { textString: [title].concat(md).join('\n\n') }; //复制内容增加标题
-        else
-            return { textString: md.join('\n\n') };
+        let bodyText = md.join('\n\n');
+        if (button === 'copy_context' || button === 'copy') {
+            let header = getHeaderMarkdown(dom, scene, type);
+            if (!header && title && title !== "无标题") {
+                header = `# ${title}\n\n`;
+            }
+            return { textString: header + bodyText };
+        }
+        else {
+            return { textString: bodyText };
+        }
     }
     // ============================以下只有 text 或 zip 2种情况===========================
     if (button == 'text') {
@@ -3040,7 +2709,7 @@ function detectType(dom, bt, ev) {
             return;
         commentText ? commentText = '\n\n---\n\n## 评论\n\n' + commentText : 0;
         let md2 = [];
-        if (type == "pin" && originPin) {
+        if (type == "pin" && dom.closest('.PinItem')?.querySelector(".PinItem-content-originpin")) {
             md2 = originPinMD;
         }
         return {
@@ -3053,7 +2722,7 @@ function detectType(dom, bt, ev) {
         var { zip, localLex } = await (0,_core_savelex__WEBPACK_IMPORTED_MODULE_4__/* ["default"] */ .A)(lex);
         if (await dealComments() == 'return')
             return;
-        if (type == "pin" && originPin) {
+        if (type == "pin" && dom.closest('.PinItem')?.querySelector(".PinItem-content-originpin")) {
             md = (0,_core_parser__WEBPACK_IMPORTED_MODULE_2__/* .parser */ .K)(localLex).concat(md);
         }
         else
@@ -3073,10 +2742,8 @@ function detectType(dom, bt, ev) {
             console.warn(e);
         }
         if (zip_merge_cm) {
-            if (commentText) {
-                commentText = '\n\n---\n\n## 评论\n\n' + commentText;
-                md.push(commentText);
-            }
+            commentText ? commentText = '\n\n---\n\n## 评论\n\n' + commentText : 0;
+            md.push(commentText);
         }
         else if (commentText)
             zip.file("comments.md", commentText);
@@ -3104,180 +2771,89 @@ __webpack_require__.dn(__WEBPACK_DEFAULT_EXPORT__);
 /* harmony export */   Y: () => (/* binding */ renderAllComments)
 /* harmony export */ });
 /**
- * 返回评论图片在 ZIP 中使用的安全文件名。
+ * 渲染单条评论
+ * @param {Object} comment
+ * @param {Map} comments
+ * @param {number} level
+ * @param {Boolean} isLocalImg
  */
-function imageBaseName(url) {
-    const fallback = 'comment-image';
-    let name = fallback;
-    try {
-        const base = typeof window !== 'undefined' ? window.location.href : undefined;
-        const parsed = new URL(url, base);
-        const rawName = parsed.pathname.split('/').pop();
-        if (rawName) {
-            try {
-                name = decodeURIComponent(rawName);
-            } catch {
-                name = rawName;
-            }
+function renderCommentToMarkdown(comment, comments, level = 0, isLocalImg) {
+    //console.log(comment);
+    // 基础模板
+    const prefix = level ? '> '.repeat(level) : '';
+    const titleLevel = level ? '####' : '###';
+
+    // 处理评论内容中的换行符，确保在markdown中正确换行
+    const formattedContent = comment.content.replace('\n', '\n\n').split('\n')
+        .map(line => `${prefix}${line}`)
+        .join('\n');
+
+    // 构建基本评论模板
+    let markdown = [
+        `${prefix}${titleLevel} ${comment.author}${comment.beReplied ? ` › ${comment.beReplied}` : ''}`,
+        prefix,
+        formattedContent,
+        prefix
+    ];
+
+    if (comment.img) {
+        let img = comment.img
+        if (isLocalImg) {
+            commentsImgs.push(comment.img)
+            img = './assets/' + comment.img.replace(/\?.*?$/, "").split("/").pop()
         }
-    } catch {
-        const rawName = String(url || '').split('?')[0].split('/').pop();
-        if (rawName) name = rawName;
+        // @ts-ignore
+        window.no_save_img && !isLocalImg ?
+            markdown.push(`${prefix}[图片]`, prefix) :
+            markdown.push(`${prefix}![](${img})`, prefix)
+        // @ts-ignore
+        console.log('comment.img', window.no_save_img);
     }
 
-    name = name
-        .replace(/[\x00-\x1f\x7f-\x9f]/g, '')
-        .replace(/[<>:"/\\|?*]/g, '-')
-        .replace(/[\u200B-\u200D\uFEFF]/g, '')
-        .replace(/\s+/g, ' ')
-        .trim()
-        .replace(/\.{2,}/g, '.')
-        .replace(/^[.\s]+|[.\s]+$/g, '')
-        .slice(0, 200)
-        .replace(/[.\s]+$/g, '') || fallback;
+    markdown.push(
+        `${prefix}${comment.time} ${comment.location} ${comment.likes} 赞`,
+        prefix
+    );
 
-    if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\..*)?$/i.test(name)) {
-        name = `_${name}`;
-    }
-    return name;
-}
-
-function uniqueImageName(url, namesByUrl, usedNames) {
-    if (namesByUrl.has(url)) return namesByUrl.get(url);
-
-    const originalName = imageBaseName(url);
-    const extensionIndex = originalName.lastIndexOf('.');
-    const stem = extensionIndex > 0 ? originalName.slice(0, extensionIndex) : originalName;
-    const extension = extensionIndex > 0 ? originalName.slice(extensionIndex) : '';
-    let fileName = originalName;
-    let suffix = 1;
-    while (usedNames.has(fileName)) {
-        fileName = `${stem}-${suffix++}${extension}`;
-    }
-
-    usedNames.add(fileName);
-    namesByUrl.set(url, fileName);
-    return fileName;
-}
-
-/**
- * 渲染单条评论。
- */
-function renderCommentToMarkdown(
-    comment,
-    comments,
-    level = 0,
-    isLocalImg,
-    commentsImgs,
-    namesByUrl,
-    usedNames,
-    ancestors
-) {
-    if (!comment || !comments) return '';
-
-    const commentId = comment.id;
-    if (commentId && ancestors.has(commentId)) return '';
-    if (commentId) ancestors.add(commentId);
-
-    try {
-        const prefix = level ? '> '.repeat(level) : '';
-        const titleLevel = level ? '####' : '###';
-        const content = String(comment.content ?? '');
-
-        // 将每个换行转换为 Markdown 段落换行，并为回复补上引用前缀。
-        const formattedContent = content.replace(/\n/g, '\n\n').split('\n')
-            .map(line => `${prefix}${line}`)
+    // 递归处理回复
+    if (comment.replies && comment.replies.length) {
+        const repliesMarkdown = comment.replies
+            .map(replyId => comments.get(replyId))
+            //.filter(reply => reply) // 过滤掉可能的无效回复
+            .map(reply => renderCommentToMarkdown(reply, comments, level + 1, isLocalImg))
             .join('\n');
 
-        let markdown = [
-            `${prefix}${titleLevel} ${String(comment.author || '匿名用户')}${comment.beReplied ? ` › ${comment.beReplied}` : ''}`,
-            prefix,
-            formattedContent,
-            prefix
-        ];
-
-        if (comment.img) {
-            const imageUrl = String(comment.img);
-            let image = imageUrl;
-            if (isLocalImg) {
-                const fileName = uniqueImageName(imageUrl, namesByUrl, usedNames);
-                if (!commentsImgs.some(item => item.url === imageUrl)) {
-                    commentsImgs.push({ url: imageUrl, fileName });
-                }
-                image = './assets/' + fileName;
-            }
-
-            const noSaveImage = typeof window !== 'undefined' && window.no_save_img;
-            noSaveImage && !isLocalImg
-                ? markdown.push(`${prefix}[图片]`, prefix)
-                : markdown.push(`${prefix}![](${image})`, prefix);
-        }
-
-        markdown.push(
-            `${prefix}${comment.time || ''} ${comment.location || ''} ${comment.likes || 0} 赞`,
-            prefix
-        );
-
-        const replies = Array.isArray(comment.replies) ? comment.replies : [];
-        if (replies.length) {
-            const repliesMarkdown = replies
-                .map(replyId => comments.get(replyId))
-                .filter(Boolean)
-                .map(reply => renderCommentToMarkdown(
-                    reply,
-                    comments,
-                    level + 1,
-                    isLocalImg,
-                    commentsImgs,
-                    namesByUrl,
-                    usedNames,
-                    ancestors
-                ))
-                .filter(Boolean)
-                .join('\n');
-
-            if (repliesMarkdown) markdown.push(repliesMarkdown.replace(/> $/, ''));
-        }
-
-        return markdown.join('\n');
-    } finally {
-        if (commentId) ancestors.delete(commentId);
+        markdown.push(repliesMarkdown.replace(/> $/, ''));
     }
+
+    return markdown.join('\n');
 }
 
+let commentsImgs = []
 /**
- * 渲染所有评论。
+ * 渲染所有评论
  * @param {Map<string, object>} commentsMap
  * @param {Boolean} isLocalImg
- * @returns {[String, Array<{url: String, fileName: String}>]}
+ * @returns {[String,String[]]}
  */
 function renderAllComments(commentsMap, isLocalImg) {
-    const comments = commentsMap && typeof commentsMap.values === 'function' ? commentsMap : new Map();
-    const commentsImgs = [];
-    const namesByUrl = new Map();
-    const usedNames = new Set();
-    const topLevelComments = Array.from(comments.values())
-        // 父评论可能尚未暂存；孤立回复仍应作为顶级评论导出，不能静默丢失。
-        .filter(comment => comment && (!comment.parentId || !comments.has(comment.parentId)));
-
+    // 找出所有顶级评论（没有parentId的评论）
+    //console.log(commentsMap)
+    const topLevelComments = Array.from(commentsMap.values())
+        .filter(comment => !comment.parentId)
+    commentsImgs = []
+    // 解析所有顶级评论及其回复
     return [
         topLevelComments
-            .map(comment => renderCommentToMarkdown(
-                comment,
-                comments,
-                0,
-                isLocalImg,
-                commentsImgs,
-                namesByUrl,
-                usedNames,
-                new Set()
-            ))
-            .filter(Boolean)
+            .map(comment => renderCommentToMarkdown(comment, commentsMap, 0, isLocalImg))
             .join('\n'),
         commentsImgs
     ];
 }
 
+/* 使用示例：
+const [markdown, imgs] = renderAllComments(comments, true);
+console.log(markdown, imgs);*/
 
 /***/ }
 
@@ -3285,7 +2861,7 @@ function renderAllComments(commentsMap, isLocalImg) {
 /************************************************************************/
 /******/ 	// The module cache
 /******/ 	const __webpack_module_cache__ = {};
-/******/ 	
+/******/
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
 /******/ 		// Check if module is in cache
@@ -3299,14 +2875,14 @@ function renderAllComments(commentsMap, isLocalImg) {
 /******/ 			// no module.loaded needed
 /******/ 			exports: {}
 /******/ 		};
-/******/ 	
+/******/
 /******/ 		// Execute the module function
-/******/ 		__webpack_modules__[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-/******/ 	
+/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
+/******/
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
-/******/ 	
+/******/
 /************************************************************************/
 /******/ 	/* webpack/runtime/define property getters */
 /******/ 	(() => {
@@ -3334,7 +2910,7 @@ function renderAllComments(commentsMap, isLocalImg) {
 /******/ 			}
 /******/ 		};
 /******/ 	})();
-/******/ 	
+/******/
 /******/ 	/* webpack/runtime/global */
 /******/ 	(() => {
 /******/ 		__webpack_require__.g = (function() {
@@ -3346,12 +2922,12 @@ function renderAllComments(commentsMap, isLocalImg) {
 /******/ 			}
 /******/ 		})();
 /******/ 	})();
-/******/ 	
+/******/
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */
 /******/ 	(() => {
 /******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
 /******/ 	})();
-/******/ 	
+/******/
 /******/ 	/* webpack/runtime/set anonymous default export name */
 /******/ 	(() => {
 /******/ 		// set .name for anonymous default exports per ES spec
@@ -3366,10 +2942,10 @@ let __webpack_exports__ = {};
 (() => {
 "use strict";
 
-// EXTERNAL MODULE: ./node_modules/.pnpm/file-saver@2.0.5/node_modules/file-saver/dist/FileSaver.min.js
-var FileSaver_min = __webpack_require__(972);
 // EXTERNAL MODULE: ./src/dealItem.ts
 var dealItem = __webpack_require__(331);
+// EXTERNAL MODULE: ./node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/dist/jszip.min.js
+var jszip_min = __webpack_require__(1);
 ;// ./node_modules/.pnpm/modern-screenshot@4.7.0/node_modules/modern-screenshot/dist/index.mjs
 function changeJpegDpi(uint8Array, dpi) {
   uint8Array[13] = 1;
@@ -5056,10 +4632,8 @@ var utils = __webpack_require__(379);
 class CommentParser {
     constructor(articleKey) {
         this.articleKey = articleKey;
-        window.ArticleComments = window.ArticleComments || {};
         // 确保文章的评论存储空间存在
-        const current = window.ArticleComments[articleKey];
-        window.ArticleComments[articleKey] = current && current.comments instanceof Map ? current : {
+        window.ArticleComments[articleKey] = window.ArticleComments[articleKey] || {
             comments: new Map(), // 使用Map存储评论，key为评论ID
             lastUpdateTime: null
         };
@@ -5073,69 +4647,60 @@ class CommentParser {
     parseComment(commentElement) {
         const commentId = commentElement.getAttribute('data-id');
 
-        // 查找评论作者与被回复者。知乎评论 DOM 经常会增加一层包装，所有节点都按可选值处理。
-        const authorContainer = commentElement.children[0]?.children[1]?.children[0] ||
-            commentElement.querySelector('.CommentItem-meta, .AuthorInfo');
-        const authorElement = authorContainer?.querySelectorAll('a') || [];
-        const author = authorElement[0]?.textContent?.trim() ||
-            commentElement.querySelector('.AuthorInfo-name, .UserLink-link')?.textContent?.trim() ||
-            '匿名用户';
+        // 查找评论作者与被回复者
+        const authorElement = commentElement.children[0].children[1].children[0].querySelectorAll('a');
+        const author = authorElement[0].textContent
         let author2
         if (authorElement[1]) {
-            author2 = authorElement[1].textContent?.trim()
+            author2 = authorElement[1].textContent
         }
 
         // 查找评论内容
         const contentElement = commentElement.querySelector('.CommentContent');
         let textContentPlain = '' // string | string[]
         let img = ''
-        Array.from(contentElement?.childNodes || []).forEach(node => {
+        Array.from(contentElement.childNodes).map(node => {
             //评论内容最小元素
             if (node.nodeName == 'DIV') {
                 if (node.classList.contains('comment_img') || node.classList.contains('comment_sticker')) {
-                    const image = node.querySelector('img');
-                    img = image?.getAttribute('data-original') || image?.getAttribute('src') || '';
+                    img = node.querySelector('img').getAttribute('data-original')
                 }
                 else if (node.classList.contains('css-1gomreu')) {//评论中的@ answer/105002650041
-                    const link = node.querySelector('a');
-                    textContentPlain += link
-                        ? '[' + (node.textContent || '') + '](' + ZhihuLink2NormalLink(link.href) + ')'
-                        : node.textContent || '';
+                    let link = node.querySelector('a').href
+                    textContentPlain += '[' + node.textContent + '](' + link + ')'
                 }
             }
-            else if (node.nodeName == 'IMG') textContentPlain += node.alt || ''//小表情
+            else if (node.nodeName == 'IMG') textContentPlain += node.alt//小表情
             else if (node.nodeName == 'A') {
                 let link = ZhihuLink2NormalLink(node.href)
-                textContentPlain += '[' + (node.textContent || '') + '](' + link + ')'
+                textContentPlain += '[' + node.textContent + '](' + link + ')'
             }
             else if (node.nodeName == 'BR') textContentPlain += '\n'
             else if (node.nodeName == 'P') {//如果一条评论有且仅有多个小表情，会用P包裹，有时分段内容也会，还有带链接内容
                 node.childNodes.forEach(c => {
                     if (c.nodeName == 'A') {
                         let link = ZhihuLink2NormalLink(c.href)
-                        textContentPlain += '[' + (c.textContent || '') + '](' + link + ')'
+                        textContentPlain += '[' + c.textContent + '](' + link + ')'
                     }
                     else if (c.nodeName == 'BR') textContentPlain += '\n'
-                    else textContentPlain += c.alt || c.textContent || ''
+                    else textContentPlain += c.alt || c.textContent
                 })
             }
-            else textContentPlain += node.textContent || ''
+            else textContentPlain += node.textContent
             //暂不处理图片，因为图片只会存在于文末。每条评论最多只有一张图片应该
         });
 
         let content = textContentPlain
 
         const timeElement = commentElement.querySelector('.css-12cl38p');
-        const time = timeElement ? relativeToAbsoluteDate(timeElement.textContent || '') : '';
+        const time = timeElement ? relativeToAbsoluteDate(timeElement.textContent) : '';
 
         const locationElement = commentElement.querySelector('.css-ntkn7q');
-        const location = locationElement?.textContent?.trim() || '';
+        const location = locationElement ? locationElement.textContent : '';
 
         const likeBox = commentElement.querySelector('.css-140jo2'),
-            likeButton = likeBox?.querySelector('.css-1vd72tl') || likeBox?.querySelector('.css-1staphk') //赞过的
-        const likeText = likeButton?.textContent || '';
-        const likeMatch = likeText.match(/\d+/);
-        const likes = likeMatch ? parseInt(likeMatch[0], 10) : 0
+            likeButton = likeBox.querySelector('.css-1vd72tl') || likeBox.querySelector('.css-1staphk') //赞过的
+        const likes = likeButton?.textContent.match(/\d+/) ? parseInt(likeButton.textContent.match(/\d+/)[0]) : 0
 
         //const isAuthor = !!commentElement.querySelector('.css-8v0dsd');
 
@@ -5163,49 +4728,41 @@ class CommentParser {
         const commentElements = Array.from(container.querySelectorAll('[data-id]'));
         const commentsData = window.ArticleComments[this.articleKey].comments;
 
-        // 先完整收集评论，再统一建立父子关系，避免回复先于父评论出现在 DOM 时丢失关系。
-        const parsedComments = [];
         commentElements.forEach(element => {
+            //console.log(element)
             const commentId = element.getAttribute('data-id');
-            if (!commentId) return;
-
             const comment = this.parseComment(element);
-            let parentElement;
-            let isReplyComment = !!element.firstElementChild?.classList.contains('css-1kwt8l8');
 
+            // 判断是否为回复评论
+            // 如果当前评论元素的子元素有css-1kwt8l8类名（一个缩进），说明这是一条回复评论
+            let parentElement, isReplyComment = element.firstElementChild.classList.contains('css-1kwt8l8');
             // 另一种情况，弹出框的回复评论（因回复太多而弹出的，和弹出框子页面的，非单纯弹出框）
             if (!isReplyComment) {
-                isReplyComment = !!element.closest('.css-16zdamy');
-                parentElement = container.querySelector('.css-tpyajk [data-id]');
-            } else {
-                parentElement = element.parentElement;
+                isReplyComment = element.closest('.css-16zdamy')
+                parentElement = container.querySelector('.css-tpyajk [data-id]')
+            } else parentElement = element.parentElement;
+            if (isReplyComment) {
+                // 向上或向里查找最近的不是回复评论的data-id元素
+                const parentCommentElement = parentElement.closest('[data-id]');
+
+                const parentId = parentCommentElement.getAttribute('data-id');
+                comment.parentId = parentId;
+
+                // 更新父评论的replies
+                const parentComment = commentsData.get(parentId);
+                if (parentComment && !parentComment.replies.includes(commentId)) {
+                    parentComment.replies.push(commentId);
+                }
             }
 
-            const parentCommentElement = isReplyComment ? parentElement?.closest('[data-id]') : null;
-            const parentId = parentCommentElement?.getAttribute('data-id');
-            if (parentId && parentId !== commentId) comment.parentId = parentId;
-            parsedComments.push(comment);
-        });
-
-        parsedComments.forEach(comment => {
-            const oldComment = commentsData.get(comment.id);
-            commentsData.set(comment.id, oldComment ? {
-                ...oldComment,
-                ...comment,
-                // 增量解析时新 DOM 可能暂时没有父评论上下文，保留已知关系。
-                parentId: comment.parentId || oldComment.parentId || null,
-                replies: []
-            } : comment);
-        });
-
-        commentsData.forEach(comment => {
-            comment.replies = [];
-        });
-        commentsData.forEach(comment => {
-            if (!comment.parentId) return;
-            const parentComment = commentsData.get(comment.parentId);
-            if (parentComment && !parentComment.replies.includes(comment.id)) {
-                parentComment.replies.push(comment.id);
+            // 更新或添加评论
+            if (commentsData.has(commentId)) {
+                // 合并新数据，保留原有的replies
+                const oldComment = commentsData.get(commentId);
+                comment.replies = oldComment.replies;
+                commentsData.set(commentId, { ...oldComment, ...comment });
+            } else {
+                commentsData.set(commentId, comment);
             }
         });
 
@@ -5270,7 +4827,6 @@ function addParseButton(ContentItem, itemId) {
     if (modal) {
         itemId = modal.getAttribute('itemId')
         cc = ContentItem.querySelector('.css-tpyajk')
-        if (!cc) return;
         toolbar = cc?.querySelector('.css-1onritu')
         cc.querySelector('.comment-parser-container-wrap')?.remove()// 避免重复添加
     }
@@ -5279,38 +4835,32 @@ function addParseButton(ContentItem, itemId) {
         cc.querySelector('.comment-parser-container-wrap')?.remove()// 避免重复添加
     }
 
-    if (!cc || !itemId || cc.querySelector('.css-189h5o3')?.textContent?.match('还没有')) return;
+    if (!cc || cc.querySelector('.css-189h5o3')?.textContent.match('还没有')) return;
 
     if (!toolbar) {
         toolbar = cc.querySelector('.css-14eeh9e')// 去兼容知乎美化 暗黑模式
         cc.querySelector('.comment-parser-container-wrap')?.remove()
     }
-    if (!toolbar) return;
     toolbar.appendChild(buttonContainer.cloneNode(true))
 
-    const saveButton = cc.querySelector(".save");
-    const unsaveButton = cc.querySelector(".unsave");
-    const sumButton = cc.querySelector(".sum");
-
-    saveButton?.addEventListener('click', (e) => {
-        e.currentTarget.textContent = ' 暂存中……… '
+    cc.querySelector(".save").addEventListener('click', (e) => {
+        e.target.textContent = ' 暂存中……… '
         setTimeout(() => {
-            e.currentTarget.textContent = '暂存此页评论'
+            e.target.textContent = '暂存此页评论'
         }, 700)
         const parser = new CommentParser(itemId);
         parser.parseComments(cc);
         //const comments = parser.getComments();
         //console.log(cc, comments);
     })
-    unsaveButton?.addEventListener('click', (e) => {
-        e.currentTarget.textContent = ' 清空中……… '
+    cc.querySelector(".unsave").addEventListener('click', (e) => {
+        e.target.textContent = ' 清空中……… '
         setTimeout(() => {
-            e.currentTarget.textContent = '清空暂存区'
+            e.target.textContent = '清空暂存区'
         }, 700)
-        window.ArticleComments = window.ArticleComments || {};
         window.ArticleComments[itemId] = undefined
     })
-    sumButton?.addEventListener('click', () => {
+    cc.querySelector(".sum").addEventListener('click', () => {
         try {
             alert('已存 ' + window.ArticleComments[itemId].comments.size + ' 条')
         } catch (e) {
@@ -5326,28 +4876,28 @@ function addParseButton(ContentItem, itemId) {
  * 2 点击评论区查看子评论
  * 3 点击评论区查看全部评论（div.css-wu78cf）（折叠评论css-1r40vb1）
  * 4 打开Modal后，点击Modal内查看子评论（css-tpyajk下才是真的评论区）不可能在点击时直接获取ID
- * 
+ *
  * 计划：
  * 1
  * 点击时查找主人ID，延时触发添加按钮（同时会添加事件）
  * 问题是在 4 时仍然找不到
- * 
+ *
  * 2
  * 点击 123 时查找主人ID并存入window，延时触发添加按钮，不传ID
  * 点击 4 时只延时触发添加按钮，不传ID
  * 使用按钮时如果没有主人ID（发生在由 1234 创造的 Modal 内按钮），使用window中的
  * 延时后只在Modal内添加（ 1 有时并不会创造Modal，此时由滚动添加）
- * 
+ *
  * 3
  * （可替代非Modal场景）
  * 点击 123 时查找主人ID，延时添加到 Modal DOM 上，延时触发添加按钮，不传ID
  * 点击 1 时额外判断如果延时后没有Modal，就传ID添加按钮
  * 23时没有可以再试一次
  * 使用按钮时如果没有主人ID（发生在由 1234 创造的 Modal 内按钮），使用 Modal DOM 中的
- * 
- * 
+ *
+ *
  * 路线
- * 
+ *
  * 基本解析功能
  * 挂载按钮与事件
  * 合并入主程序
@@ -5357,7 +4907,7 @@ function addParseButton(ContentItem, itemId) {
  * 细节处理（筛选后显示、已关闭、待展开子项）
  * 人性化提示（保存正文前、暂存反馈）
  * 专栏与搜索结果页
- * 
+ *
  */
 /**
  * 调用后挂载document点击事件
@@ -5365,9 +4915,8 @@ function addParseButton(ContentItem, itemId) {
 const mountParseComments = () => {
     const autoAdd = () => setTimeout(() => {
         let c = document.querySelector('.Post-content') || document.querySelector('.ContentItem')
-        if (!c) return
         let itemId = getItemId(c, c)
-        if (itemId) addParseButton(c, itemId)
+        addParseButton(c, itemId)
     }, 2000)
     if (location.href.match(/\/pin\/|\/p\//)) {
         // 想法页文章页直接呈现评论
@@ -5375,45 +4924,42 @@ const mountParseComments = () => {
     }
     document.addEventListener("click", (e) => {
         let itemId
-        const target = e.target instanceof Element ? e.target : null
-        if (!target) return
-        const btn = target.closest('button')
+        const btn = e.target.closest('button')
         // 1
         if (btn?.closest('.ContentItem-actions') && /评论/.test(btn.textContent)) {
-            let father = target.closest(".ContentItem") || target.closest(".Post-content")
+            let father = e.target.closest(".ContentItem") || e.target.closest(".Post-content")
             //注意文章页，搜索结果页
-            itemId = getItemId(father, target)
-            if (!itemId) return
+            itemId = getItemId(father, e.target)
             setTimeout(() => {
                 let modal = document.querySelector('.Modal-content')
                 if (modal) {
                     modal.setAttribute('itemId', itemId)
                     addParseButton(modal, itemId)
                 }
-                else if (father) addParseButton(father, itemId)
+                else addParseButton(father, itemId)
             }, 1200);
             return;
         }
         // 23 4
-        else if (btn || target.closest('.css-wu78cf') || target.closest('.css-tpyajk .css-1jm49l2') || target.closest('.css-1r40vb1')) {
-            let click = btn || target.closest('.css-wu78cf') || target.closest('.css-tpyajk .css-1jm49l2') || target.closest('.css-1r40vb1')
-            if (click?.textContent?.match(/(查看.*(评论|回复))|评论回复/)) {
+        else if (btn || e.target.closest('.css-wu78cf') || e.target.closest('.css-tpyajk .css-1jm49l2') || e.target.closest('.css-1r40vb1')) {
+            let click = btn || e.target.closest('.css-wu78cf') || e.target.closest('.css-tpyajk .css-1jm49l2') || e.target.closest('.css-1r40vb1')
+            if (click.textContent.match(/(查看.*(评论|回复))|评论回复/)) {
 
-                let father = target.closest(".ContentItem") || target.closest(".Post-content")
+                let father = e.target.closest(".ContentItem") || e.target.closest(".Post-content")
                 //注意文章页，搜索结果页
                 setTimeout(() => {
                     let modal = document.querySelector('.Modal-content')
                     if (father) {// 4:false，不需要获取
                         //非Modal内 23
                         //console.log(2233)
-                        itemId = getItemId(father, target)
-                        if (modal && itemId) modal.setAttribute('itemId', itemId)
+                        itemId = getItemId(father, e.target)
+                        modal.setAttribute('itemId', itemId)
                     }
-                    if (modal && itemId) addParseButton(modal, itemId)// 最终都是给Modal挂
+                    addParseButton(modal, itemId)// 最终都是给Modal挂
                 }, 1200);
             }
         }
-        if (target.closest('button.hint')) {
+        if (e.target.closest('button.hint')) {
             try {
                 var skip_empty_p = GM_getValue("skip_empty_p"),
                     zip_merge_cm = GM_getValue("zip_merge_cm"),
@@ -5432,63 +4978,40 @@ const mountParseComments = () => {
         else if (btn?.getAttribute('aria-label') == "关闭") {
             autoAdd()// 文章页关闭弹出框后按钮消失
         }
-        if (target.closest('.ContentItem-more')) {
+        if (e.target.closest('.ContentItem-more')) {
             setTimeout(window.zhbf, 200)// 评论无关功能，展开后无需滚动即可保存
         }
     })
 }
 
 /**
- * 
+ *
  * @param {HtmlElement} father 含有itemId zop
  * @param {HtmlElement} etg e.target
  * @returns {String}
  */
 const getItemId = (father, etg) => {
-    if (!father || !etg) return null
-
-    let zopdata
-    try {
-        zopdata = JSON.parse(father.getAttribute("data-zop") || '{}')
-    } catch {
-        zopdata = {}
-    }
+    let zopdata = JSON.parse(father.getAttribute("data-zop") || '{}')
     if (!zopdata.itemId) {
         // 搜索结果页
-        father = etg.closest(".Card") || father.closest(".Card")
-        if (!father) return null
-        let zem
-        try {
-            zem = JSON.parse(father.getAttribute("data-za-extra-module") || '{}').card?.content
-        } catch {
-            zem = null
-        }
-        if (!zem?.type || !zem.token) return null
+        father = etg.closest(".Card")
+        let zem = JSON.parse(father.getAttribute("data-za-extra-module")).card.content
         zopdata.type = zem.type
         if (zopdata.type == 'Post') zopdata.type = 'article'
         zopdata.itemId = zem.token
     }
-    if (!zopdata.type || !zopdata.itemId) return null
-    return String(zopdata.type).toLowerCase() + String(zopdata.itemId)
+    return zopdata.type.toLowerCase() + zopdata.itemId
 }
 
-function ZhihuLink2NormalLink(link) {
-    if (!link) return ''
-    try {
-        const base = typeof window !== 'undefined' ? window.location.href : undefined
-        const url = new URL(link, base)
-        if (url.hostname == "link.zhihu.com") {
-            const target = url.searchParams.get("target")
-            if (!target) return link
-            try {
-                return decodeURIComponent(target)
-            } catch {
-                return target
-            }
-        }
-        return url.hash ? url.hash : link
-    } catch {
-        return link
+const ZhihuLink2NormalLink = (link) => {
+    const url = new URL(link)
+    if (url.hostname == "link.zhihu.com") {
+        const target = new URLSearchParams(url.search).get("target")
+        return decodeURIComponent(target)
+    }
+    else {
+        if (link.match(/#/)) return '#' + link.split('#')[1]
+        else return link
     }
 }
 
@@ -5501,8 +5024,6 @@ function relativeToAbsoluteDate(relativeTime) {
     //const now = new Date();
     //更精确一点了：推算日内可知部分并将不可知部分置为0
     let result = new Date();
-    relativeTime = String(relativeTime || '').trim();
-    if (!relativeTime) return '';
 
     if (relativeTime.includes('分钟前')) {
         const minutes = parseInt(relativeTime);
@@ -5518,10 +5039,10 @@ function relativeToAbsoluteDate(relativeTime) {
         result.setDate(result.getDate() - 1);
         result.setSeconds(0);
     }
-    else if (/^\d+天前$/.test(relativeTime)) {
-            result.setDate(result.getDate() - parseInt(relativeTime, 10));
+    /*     else if (relativeTime.includes('天前')) {
+            result.setDate(result.getDate() - relativeTime.match(/\d+/)[0]);
             result.setSeconds(0);
-    }
+        } */
     // 处理 "MM-DD" 格式
     else if (/^\d{2}-\d{2}$/.test(relativeTime)) {
         const [month, day] = relativeTime.split('-').map(num => parseInt(num));
@@ -5551,6 +5072,8 @@ function formatDate(date) {
 
 // EXTERNAL MODULE: ./src/core/obsidianSaver.ts
 var obsidianSaver = __webpack_require__(784);
+// EXTERNAL MODULE: ./src/core/toast.ts
+var toast = __webpack_require__(197);
 ;// ./src/index.ts
 
 
@@ -5558,126 +5081,174 @@ var obsidianSaver = __webpack_require__(784);
 
 
 
-/**
- * 适配复杂的想法：转发、带卡片链接、带@
- * 页：推送页，个人/机构主页，回答页，问题页，文章页，想法页，收藏夹页，搜索结果页
- */
+
 // @grant        GM_setValue
 // @grant        GM_getValue
-// @grant    GM_registerMenuCommand
-// @grant    GM_unregisterMenuCommand
+// @grant        GM_registerMenuCommand
+// @grant        GM_unregisterMenuCommand
+// @grant        GM_setClipboard
+const copyToClipboard = (text) => {
+    try {
+        // @ts-ignore
+        if (typeof GM_setClipboard !== "undefined") {
+            // @ts-ignore
+            GM_setClipboard(text, "text");
+            return true;
+        }
+    }
+    catch (e) { }
+    try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text);
+            return true;
+        }
+    }
+    catch (e) { }
+    try {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+        return true;
+    }
+    catch (e) { }
+    return false;
+};
 /**
- * 油猴按钮
+ * 油猴按钮 - 保留所有原生设置
  */
-let registeredMenuIds = [];
 function registerBtn() {
     try {
-        // 知乎页面切换内容列表时会再次调用此函数，先清理旧菜单避免重复注册。
-        const unregisterMenuCommand = globalThis.GM_unregisterMenuCommand;
-        if (typeof unregisterMenuCommand === "function") {
-            registeredMenuIds.forEach((id) => {
-                if (id !== undefined && id !== null)
-                    unregisterMenuCommand(id);
-            });
-        }
-        registeredMenuIds = [];
         // @ts-ignore
-        let skipEmpty = GM_registerMenuCommand("（推荐）解析时跳过空白段落", function () {
+        let uiMode = GM_getValue("ui_mode", "minimal");
+        // @ts-ignore
+        GM_registerMenuCommand(`🎨 UI界面模式：${uiMode === 'minimal' ? '【老版极简居中】(点击切换新版)' : '【新版增强侧边栏】(点击切换老版)'}`, function () {
+            let nextMode = uiMode === 'minimal' ? 'full' : 'minimal';
+            // @ts-ignore
+            GM_setValue("ui_mode", nextMode);
+            alert(`已切换为：${nextMode === 'minimal' ? '老版极简居中 UI' : '新版增强侧边栏 UI'}\n刷新页面后生效。`);
+            location.reload();
+        });
+        // @ts-ignore
+        let sidebarTriggerMode = GM_getValue("sidebar_trigger_mode", "hover_content");
+        // @ts-ignore
+        GM_registerMenuCommand(`🔘 侧边栏展开方式：${sidebarTriggerMode === 'chevron' ? '【Chevron图标触发】(点击切换为【鼠标悬停正文】)' : '【鼠标悬停正文触发(原版)】(点击切换为【Chevron图标】)'}`, function () {
+            let nextMode = sidebarTriggerMode === 'chevron' ? 'hover_content' : 'chevron';
+            // @ts-ignore
+            GM_setValue("sidebar_trigger_mode", nextMode);
+            alert(`已切换为：${nextMode === 'chevron' ? 'Chevron 图标触发模式' : '鼠标悬停正文触发模式 (原版)'}\n刷新页面后生效。`);
+            location.reload();
+        });
+        // @ts-ignore
+        GM_registerMenuCommand("（推荐）解析时跳过空白段落", function () {
             // @ts-ignore
             let ac = GM_getValue("skip_empty_p"), c;
             !ac ? c = confirm("解析时跳过空白段落，避免产生大量多余的换行，你是否继续？") : alert('已取消跳过空白段落');
             if (c) {
                 // @ts-ignore
                 GM_setValue("skip_empty_p", true);
-                // @ts-ignore
             }
             else
                 GM_setValue("skip_empty_p", false);
         });
-        registeredMenuIds.push(skipEmpty);
         // @ts-ignore
-        let menuFM = GM_registerMenuCommand("复制内容时添加fm元信息", function () {
+        GM_registerMenuCommand("复制内容时添加fm元信息", function () {
             // @ts-ignore
             let ac = GM_getValue("copy_save_fm"), c;
             !ac ? c = confirm("复制内容时，添加 frontmatter 信息，就像下载为纯文本的时候一样。你是否继续？") : alert('已取消复制添加fm');
             // @ts-ignore
             c ? GM_setValue("copy_save_fm", true) : GM_setValue("copy_save_fm", false);
-            //alert(GM_getValue("copy_save_fm"))
         });
-        registeredMenuIds.push(menuFM);
         // @ts-ignore
-        let menuSaveCM = GM_registerMenuCommand("复制内容时同时复制评论", function () {
+        GM_registerMenuCommand("复制内容时同时复制评论", function () {
             // @ts-ignore
             let ns = GM_getValue("copy_save_cm"), c;
             !ns ? c = confirm("启用后，复制时也会复制评论，就像直接复制了下载的纯文本。你是否继续？") : alert('已取消复制评论');
             // @ts-ignore
             c ? GM_setValue("copy_save_cm", true) : GM_setValue("copy_save_cm", false);
-            //alert(GM_getValue("copy_save_cm"))
         });
-        registeredMenuIds.push(menuSaveCM);
         // @ts-ignore
-        let menuMergeCM = GM_registerMenuCommand("下载zip时合并正文与评论", function () {
+        GM_registerMenuCommand("下载zip时合并正文与评论", function () {
             // @ts-ignore
             let ns = GM_getValue("zip_merge_cm"), c;
             !ns ? c = confirm("启用后，下载zip时会合并正文与评论到一个文件中。你是否继续？") : alert('已取消合并');
             // @ts-ignore
             c ? GM_setValue("zip_merge_cm", true) : GM_setValue("zip_merge_cm", false);
-            //alert(GM_getValue("zip_merge_cm"))
         });
-        registeredMenuIds.push(menuMergeCM);
         // @ts-ignore
-        let menuSaveImg = GM_registerMenuCommand("复制与下载纯文本时不保存图片", function () {
+        GM_registerMenuCommand("复制与下载纯文本时不保存图片", function () {
             // @ts-ignore
             let ns = GM_getValue("no_save_img"), c;
             !ns ? c = confirm("启用后，复制、存文本时将所有图片替换为“[图片]”，不影响存zip。你是否继续？") : alert('已取消不存图');
             // @ts-ignore
             c ? GM_setValue("no_save_img", true) : GM_setValue("no_save_img", false);
-            //alert(GM_getValue("no_save_img"))
         });
-        registeredMenuIds.push(menuSaveImg);
         // @ts-ignore
-        let menuFilename = GM_registerMenuCommand("自定义保存后的文件名格式", function () {
+        GM_registerMenuCommand("自定义保存后的文件名格式", function () {
             // @ts-ignore
             let efm = GM_getValue("edit_Filename");
             let fm = prompt(`是否自定义保存后的文件名格式？留空或填错恢复默认\n默认为title + "_" + author.name + "_" + time.modified.slice(0, 10) + remark，你可以调整它的顺序，使用其他属性需要阅读源码\n(new Date).toLocaleDateString().replaceAll('/','-')添加保存日期`, efm ? efm : 'title + "_" + author.name + "_" + time.modified.slice(0, 10) + remark');
             // @ts-ignore
             GM_setValue("edit_Filename", fm);
-            //alert(GM_getValue("edit_Filename"))
         });
-        registeredMenuIds.push(menuFilename);
     }
     catch (e) {
         console.warn(e);
     }
 }
 registerBtn();
-async function copyText(text) {
-    if (navigator.clipboard?.writeText) {
-        try {
-            await navigator.clipboard.writeText(text);
-            return;
-        }
-        catch (error) {
-            console.warn("浏览器剪贴板写入失败，尝试兼容方案:", error);
-        }
-    }
-    const textarea = document.createElement("textarea");
-    textarea.value = text;
-    textarea.style.position = "fixed";
-    textarea.style.opacity = "0";
-    document.body.appendChild(textarea);
+const getUIMode = () => {
     try {
-        textarea.select();
-        if (!document.execCommand("copy"))
-            throw new Error("浏览器拒绝了剪贴板操作");
+        // @ts-ignore
+        return GM_getValue("ui_mode", "minimal");
     }
-    finally {
-        textarea.remove();
+    catch (e) {
+        return "minimal";
     }
-}
-const ButtonContainer = document.createElement("div");
-ButtonContainer.classList.add("zhihubackup-wrap");
-ButtonContainer.innerHTML = `<div class="zhihubackup-container">
+};
+const getSidebarTriggerMode = () => {
+    try {
+        // @ts-ignore
+        return GM_getValue("sidebar_trigger_mode", "hover_content");
+    }
+    catch (e) {
+        return "hover_content";
+    }
+};
+const renderContainerHTML = () => {
+    const isMinimal = getUIMode() === 'minimal';
+    if (isMinimal) {
+        return `<div class="zhcollect-minimal-btns">
+    <button class="to-copy-context zhcollect-btn" style="border-radius:1em 0 0 1em;padding-left:.4em;">复制标题+正文</button>
+    <button class="to-copy-content zhcollect-btn" style="border-radius:0 1em 1em 0;padding-right:.4em;">复制正文</button>
+</div>`;
+    }
+    const isChevronMode = getSidebarTriggerMode() === 'chevron';
+    if (isChevronMode) {
+        return `<div class="zhihubackup-sticky-box">
+    <div class="zhihubackup-container">
+        <button class="to-copy Button VoteButton">复制为Markdown</button>
+        <button class="to-zip Button VoteButton">下载为 ZIP</button>
+        <button class="to-text Button VoteButton">下载为纯文本</button>
+        <button class="to-png Button VoteButton">剪藏为 PNG</button>
+        <button class="to-obsidian Button VoteButton">
+        <svg style="width: 2em;height: 2em;width: 1.5em;height: 1.5em;opacity: 0.6;vertical-align: sub;" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M19.355 18.538a68.967 68.959 0 0 0 1.858-2.954a.81.81 0 0 0-.062-.9c-.516-.685-1.504-2.075-2.042-3.362c-.553-1.321-.636-3.375-.64-4.377a1.7 1.7 0 0 0-.358-1.05l-3.198-4.064a4 4 0 0 1-.076.543c-.106.503-.307 1.004-.536 1.5c-.134.29-.29.6-.446.914l-.31.626c-.516 1.068-.997 2.227-1.132 3.59c-.124 1.26.046 2.73.815 4.481q.192.016.386.044a6.36 6.36 0 0 1 3.326 1.505c.916.79 1.744 1.922 2.415 3.5zM8.199 22.569q.11.019.22.02c.78.024 2.095.092 3.16.29c.87.16 2.593.64 4.01 1.055c1.083.316 2.198-.548 2.355-1.664c.114-.814.33-1.735.725-2.58l-.01.005c-.67-1.87-1.522-3.078-2.416-3.849a5.3 5.3 0 0 0-2.778-1.257c-1.54-.216-2.952.19-3.84.45c.532 2.218.368 4.829-1.425 7.531zM5.533 9.938q-.035.15-.098.29L2.82 16.059a1.6 1.6 0 0 0 .313 1.772l4.116 4.24c2.103-3.101 1.796-6.02.836-8.3c-.728-1.73-1.832-3.081-2.55-3.831zM9.32 14.01c.615-.183 1.606-.465 2.745-.534c-.683-1.725-.848-3.233-.716-4.577c.154-1.552.7-2.847 1.235-3.95q.17-.35.328-.664c.149-.297.288-.577.419-.86c.217-.47.379-.885.46-1.27c.08-.38.08-.72-.014-1.043c-.095-.325-.297-.675-.68-1.06a1.6 1.6 0 0 0-1.475.36l-4.95 4.452a1.6 1.6 0 0 0-.513.952l-.427 2.83c.672.59 2.328 2.316 3.335 4.711q.136.317.253.653"></path></svg>
+        保存到<br>指定文件夹</button>
+        <div class="Button VoteButton" style="display: inline-block;box-sizing: border-box;overflow: hidden;">
+            <textarea class="to-remark" type="text" placeholder="添加备注" style="width: 100%;" maxlength="60"></textarea>
+        </div>
+        <div class="Button VoteButton" style="display: inline-block;box-sizing: border-box;">
+            <label><input type="checkbox" checked class="to-cm"> 保存评论</label>
+        </div>
+    </div>
+    <div class="zhihubackup-trigger" title="展开工具栏"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></div>
+</div>`;
+    }
+    return `<div class="zhihubackup-container">
     <button class="to-copy Button VoteButton">复制为Markdown</button>
     <button class="to-zip Button VoteButton">下载为 ZIP</button>
     <button class="to-text Button VoteButton">下载为纯文本</button>
@@ -5690,231 +5261,170 @@ ButtonContainer.innerHTML = `<div class="zhihubackup-container">
     </div>
     <div class="Button VoteButton" style="display: inline-block;box-sizing: border-box;">
         <label><input type="checkbox" checked class="to-cm"> 保存评论</label>
-    </div>`;
+    </div>
+</div>`;
+};
+const ButtonContainer = document.createElement("div");
+if (getUIMode() === 'full') {
+    ButtonContainer.classList.add("zhihubackup-wrap");
+}
+ButtonContainer.innerHTML = renderContainerHTML();
+function throttle(func, wait = 1000) {
+    let timer = null;
+    return function (...args) {
+        if (!timer) {
+            func.apply(this, args);
+            timer = setTimeout(() => {
+                timer = null;
+            }, wait);
+        }
+    };
+}
 const main = async () => {
-    //console.log("Starting…")
     const RichTexts = Array.from(document.querySelectorAll(".RichText"));
     for (let RichText of RichTexts) {
         try {
             let result;
-            //console.log(RichText)
-            if (!RichText.parentElement || RichText.parentElement.classList.contains("Editable"))
+            if (RichText.parentElement && RichText.parentElement.classList.contains("Editable"))
                 continue;
             if (window.location.hostname.includes('zhuanlan')) {
-                const postMain = RichText.closest('.Post-Main');
-                if (!postMain || postMain.querySelector(".zhihubackup-container"))
+                if (RichText.closest('.Post-Main')?.querySelector(".zhcollect-minimal-btns, .zhihubackup-container"))
                     continue;
             }
             else {
                 if (RichText.closest('.PinItem')) {
                     if (!RichText.closest('.RichContent-inner'))
-                        continue; //每个带图想法有3个RichText，除掉图、假转发
-                    //if (RichText.children[0].classList.contains("Image-Wrapper-Preview")) continue
+                        continue;
                     if (RichText.closest('.PinItem-content-originpin'))
-                        continue; //被转发想法
+                        continue;
                 }
-                const richContent = RichText.closest('.RichContent');
-                if (!richContent || richContent.querySelector(".zhihubackup-container"))
+                if (RichText.closest('.RichContent')?.querySelector(".zhcollect-minimal-btns, .zhihubackup-container"))
                     continue;
                 const richInner = RichText.closest('.RichContent-inner');
                 if (richInner && richInner.querySelector(".ContentItem-more"))
-                    continue; //未展开
-                if (richContent.querySelector(".ContentItem-expandButton"))
                     continue;
-                //if (RichText.textContent.length == 0) continue
+                if (RichText.closest('.RichContent')?.querySelector(".ContentItem-expandButton"))
+                    continue;
             }
             const aButtonContainer = ButtonContainer.cloneNode(true);
-            //父级
             let parent_dom = RichText.closest('.List-item') ||
                 RichText.closest('.Post-content') ||
                 RichText.closest('.PinItem') ||
                 RichText.closest('.CollectionDetailPageItem') ||
-                RichText.closest('.Card');
-            if (!parent_dom)
-                continue;
-            if (parent_dom.querySelector('.Catalog')) {
-                aButtonContainer.firstElementChild.style.position = 'fixed';
-                aButtonContainer.firstElementChild.style.top = 'unset';
-                aButtonContainer.firstElementChild.style.bottom = '60px';
+                RichText.closest('.Card') || RichText;
+            if (getUIMode() === 'full') {
+                if (getSidebarTriggerMode() === 'chevron') {
+                    aButtonContainer.classList.add('zhihubackup-chevron-mode');
+                }
+                const containerEl = aButtonContainer.querySelector('.zhihubackup-container');
+                if (parent_dom.querySelector && parent_dom.querySelector('.Catalog') && containerEl) {
+                    containerEl.style.position = 'fixed';
+                    containerEl.style.top = 'unset';
+                    containerEl.style.bottom = '60px';
+                }
+                let p = RichText.closest('.RichContent') || RichText.closest('.Post-RichTextContainer') || RichText;
+                p.prepend(aButtonContainer);
+                const closeAllSidebars = (except) => {
+                    document.querySelectorAll('.zhihubackup-wrap.is-open').forEach((el) => {
+                        if (el !== except)
+                            el.classList.remove('is-open');
+                    });
+                };
+                // Chevron trigger: hover or click to open sidebar, single active panel globally
+                const trigger = aButtonContainer.querySelector('.zhihubackup-trigger');
+                if (trigger) {
+                    trigger.addEventListener('mouseenter', () => {
+                        closeAllSidebars(aButtonContainer);
+                        aButtonContainer.classList.add('is-open');
+                    });
+                    trigger.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const wasOpen = aButtonContainer.classList.contains('is-open');
+                        closeAllSidebars();
+                        if (!wasOpen) {
+                            aButtonContainer.classList.add('is-open');
+                        }
+                    });
+                    aButtonContainer.addEventListener('mouseleave', () => {
+                        aButtonContainer.classList.remove('is-open');
+                    });
+                }
             }
-            let p = RichText.closest('.RichContent') || RichText.closest('.Post-RichTextContainer');
-            if (!p)
-                continue;
-            p.prepend(aButtonContainer);
-            // 为 textarea 添加事件监听器，阻止事件冒泡，确保可以正常输入
-            const textareaRemark = aButtonContainer.querySelector(".to-remark");
-            textareaRemark?.addEventListener("click", (e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                textareaRemark.focus();
-            }, true); // 使用捕获阶段
-            const ButtonMarkdown = aButtonContainer.querySelector(".to-copy");
-            if (!ButtonMarkdown) {
-                aButtonContainer.remove();
-                continue;
+            else {
+                RichText.prepend(aButtonContainer);
             }
-            ButtonMarkdown.addEventListener("click", throttle(async (event) => {
-                try {
-                    const res = await (0,dealItem/* default */.A)(RichText, 'copy', event);
-                    if (!res)
-                        return; // 取消保存
-                    result = {
-                        textString: res.textString,
-                        title: res.title,
-                    };
-                    /*console.log(result.markdown.join("\n\n"))*/
-                    await copyText(result.textString || "");
-                    ButtonMarkdown.innerHTML = "复制成功✅";
-                    setTimeout(() => {
-                        ButtonMarkdown.innerHTML = "复制为Markdown";
-                    }, 3000);
-                }
-                catch (e) {
-                    console.log(e);
-                    ButtonMarkdown.innerHTML = "发生错误❌<br>请打开控制台查看";
-                    setTimeout(() => {
-                        ButtonMarkdown.innerHTML = "复制为Markdown";
-                    }, 3000);
-                }
-            }));
-            const ButtonZip = aButtonContainer.querySelector(".to-zip");
-            ButtonZip.addEventListener("click", throttle(async (event) => {
-                try {
-                    ButtonZip.innerHTML = "下载中……";
-                    const res = await (0,dealItem/* default */.A)(RichText, 'zip', event);
-                    if (!res)
-                        return ButtonZip.innerHTML = "下载为 ZIP"; // 取消保存
-                    result = {
-                        zip: res.zip,
-                        title: res.title,
-                    };
-                    const blob = await result.zip.generateAsync({ type: "blob" });
-                    (0,FileSaver_min.saveAs)(blob, result.title + ".zip");
-                    ButtonZip.innerHTML = "下载成功✅<br>请看下载记录";
-                    setTimeout(() => {
-                        ButtonZip.innerHTML = "下载为 ZIP";
-                    }, 5000);
-                }
-                catch (e) {
-                    console.log(e);
-                    ButtonZip.innerHTML = "发生错误❌<br>请打开控制台查看";
-                    setTimeout(() => {
-                        ButtonZip.innerHTML = "下载为 ZIP";
-                    }, 5000);
-                }
-            }));
-            const ButtonPNG = aButtonContainer.querySelector(".to-png");
-            ButtonPNG.addEventListener("click", throttle(async (event) => {
-                try {
-                    const res = await (0,dealItem/* default */.A)(RichText, 'png', event);
-                    if (!res)
-                        return; // 取消保存
-                    result = {
-                        title: res.title,
-                    };
-                    let clip = parent_dom;
-                    clip.classList.add("to-screenshot");
-                    let saveCM = (0,utils/* getCommentSwitch */.mK)(RichText);
-                    !saveCM ? clip.classList.add("no-cm") : 0;
-                    let svgDefs = document.querySelector("#MathJax_SVG_glyphs");
-                    let svgVisibility = svgDefs?.style.visibility;
-                    svgDefs ? svgDefs.style.visibility = "visible" : 0;
+            const textareaRemark = parent_dom.querySelector(".to-remark");
+            if (textareaRemark) {
+                textareaRemark.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    textareaRemark.focus();
+                }, true);
+            }
+            const bindCopyBtn = (selector, mode, defaultText) => {
+                const btn = parent_dom.querySelector(selector);
+                if (!btn)
+                    return;
+                btn.addEventListener("click", throttle(async (event) => {
                     try {
-                        const dataUrl = await domToPng(clip, {
-                            backgroundColor: "#fff",
-                            filter(el) {
-                                if (el.tagName == 'DIV' && el.classList.contains('zhihubackup-wrap'))
-                                    return false;
-                                else
-                                    return true;
-                            },
-                        });
-                        const link = document.createElement('a');
-                        link.download = result.title + ".png";
-                        link.href = dataUrl;
-                        link.click();
-                        ButtonPNG.innerHTML = "请稍待片刻✅<br>查看下载记录";
-                        setTimeout(() => { ButtonPNG.innerHTML = "剪藏为 PNG"; }, 5000);
+                        const res = await (0,dealItem/* default */.A)(RichText, mode, event);
+                        if (!res || !res.textString) {
+                            btn.innerHTML = "发生错误❌";
+                            setTimeout(() => { btn.innerHTML = defaultText; }, 2000);
+                            return;
+                        }
+                        copyToClipboard(res.textString);
+                        btn.innerHTML = "复制成功✅";
+                        setTimeout(() => { btn.innerHTML = defaultText; }, 1500);
                     }
-                    finally {
-                        clip.classList.remove("to-screenshot");
-                        !saveCM ? clip.classList.remove("no-cm") : 0;
-                        if (svgDefs)
-                            svgDefs.style.visibility = svgVisibility;
+                    catch (e) {
+                        console.error(e);
+                        btn.innerHTML = "发生错误❌";
+                        setTimeout(() => { btn.innerHTML = defaultText; }, 2000);
                     }
-                }
-                catch (e) {
-                    console.log(e);
-                    ButtonPNG.innerHTML = "发生错误❌<br>请打开控制台查看";
-                    setTimeout(() => {
-                        ButtonPNG.innerHTML = "剪藏为 PNG";
-                    }, 5000);
-                }
-            }));
-            const ButtonText = aButtonContainer.querySelector(".to-text");
-            ButtonText.addEventListener("click", throttle(async (event) => {
-                try {
-                    const res = await (0,dealItem/* default */.A)(RichText, 'text', event);
-                    if (!res)
-                        return; // 取消保存
-                    result = {
-                        textString: res.textString,
-                        title: res.title,
-                    };
-                    const blob = new Blob([result.textString], { type: 'text/plain' });
-                    (0,FileSaver_min.saveAs)(blob, result.title + ".md");
-                    ButtonText.innerHTML = "下载成功✅<br>请看下载记录，以文本方式打开";
-                    setTimeout(() => {
-                        ButtonText.innerHTML = "下载为纯文本";
-                    }, 5000);
-                }
-                catch (e) {
-                    console.log(e);
-                    ButtonText.innerHTML = "发生错误❌<br>请打开控制台查看";
-                    setTimeout(() => {
-                        ButtonText.innerHTML = "下载为纯文本";
-                    }, 5000);
-                }
-            }));
-            const ButtonObsidian = aButtonContainer.querySelector(".to-obsidian");
-            ButtonObsidian.addEventListener("click", throttle(async (event) => {
-                try {
-                    let saveType = await (0,obsidianSaver/* selectObsidianVault */.yY)();
-                    if (!saveType)
-                        return; // 取消保存
-                    if (saveType == 'text') {
-                        const res = await (0,dealItem/* default */.A)(RichText, 'text');
-                        if (!res)
-                            return; // 取消保存
-                        result = {
-                            textString: res.textString,
-                            title: res.title,
-                        };
-                        await (0,obsidianSaver/* saveFile */.OJ)(result, saveType);
-                    }
-                    else if (saveType.slice(0, 3) == 'zip') {
-                        const res = await (0,dealItem/* default */.A)(RichText, 'zip');
-                        if (!res)
-                            return; // 取消保存
-                        result = {
-                            zip: res.zip,
-                            title: res.title,
-                        };
-                        await (0,obsidianSaver/* saveFile */.OJ)(result, saveType);
-                    }
-                    else if (saveType == 'png') {
-                        const res = await (0,dealItem/* default */.A)(RichText, 'png');
-                        if (!res)
-                            return; // 取消保存
-                        let clip = parent_dom;
-                        clip.classList.add("to-screenshot");
-                        let saveCM = (0,utils/* getCommentSwitch */.mK)(RichText);
-                        !saveCM ? clip.classList.add("no-cm") : 0;
-                        let svgDefs = document.querySelector("#MathJax_SVG_glyphs");
-                        let svgVisibility = svgDefs?.style.visibility;
-                        svgDefs ? svgDefs.style.visibility = "visible" : 0;
-                        try {
-                            const dataUrl = await domToPng(clip, {
+                }));
+            };
+            bindCopyBtn(".to-copy-context", "copy_context", "复制标题+正文");
+            bindCopyBtn(".to-copy-content", "copy_content", "复制正文");
+            bindCopyBtn(".to-copy", "copy_context", "复制为Markdown");
+            const bindSaveBtn = (selector, saveType) => {
+                const btn = parent_dom.querySelector(selector);
+                if (!btn)
+                    return;
+                btn.addEventListener("click", throttle(async (event) => {
+                    try {
+                        let result;
+                        if (saveType.slice(0, 4) == 'text') {
+                            const res = await (0,dealItem/* default */.A)(RichText, 'text');
+                            if (!res)
+                                return;
+                            result = {
+                                textString: res.textString,
+                                title: res.title,
+                            };
+                            await (0,obsidianSaver/* saveFile */.OJ)(result, saveType);
+                        }
+                        else if (saveType.slice(0, 3) == 'zip') {
+                            const res = await (0,dealItem/* default */.A)(RichText, 'zip');
+                            if (!res)
+                                return;
+                            result = {
+                                zip: res.zip,
+                                title: res.title,
+                            };
+                            await (0,obsidianSaver/* saveFile */.OJ)(result, saveType);
+                        }
+                        else if (saveType == 'png') {
+                            const res = await (0,dealItem/* default */.A)(RichText, 'png');
+                            if (!res)
+                                return;
+                            let clip = parent_dom;
+                            clip.classList.add("to-screenshot");
+                            let saveCM = (0,utils/* getCommentSwitch */.mK)(RichText);
+                            !saveCM ? clip.classList.add("no-cm") : 0;
+                            let svgDefs = document.querySelector("#MathJax_SVG_glyphs");
+                            svgDefs ? svgDefs.style.visibility = "visible" : 0;
+                            domToPng(clip, {
                                 backgroundColor: "#fff",
                                 filter(el) {
                                     if (el.tagName == 'DIV' && el.classList.contains('zhihubackup-wrap'))
@@ -5922,81 +5432,206 @@ const main = async () => {
                                     else
                                         return true;
                                 },
+                            }).then(async (dataUrl) => {
+                                result = {
+                                    textString: dataUrl,
+                                    title: res.title,
+                                };
+                                clip.classList.remove("to-screenshot");
+                                !saveCM ? clip.classList.remove("no-cm") : 0;
+                                await (0,obsidianSaver/* saveFile */.OJ)(result, saveType);
                             });
-                            result = {
-                                textString: dataUrl,
-                                title: res.title,
-                            };
-                            await (0,obsidianSaver/* saveFile */.OJ)(result, saveType);
-                        }
-                        finally {
-                            clip.classList.remove("to-screenshot");
-                            !saveCM ? clip.classList.remove("no-cm") : 0;
-                            if (svgDefs)
-                                svgDefs.style.visibility = svgVisibility;
                         }
                     }
-                }
-                catch (e) {
-                    console.log(e);
-                    alert('发生错误❌请打开控制台查看\n你可以关闭窗口后再试一次！');
-                }
-            }));
+                    catch (e) {
+                        console.log(e);
+                        alert('发生错误❌请打开控制台查看\n你可以关闭窗口后再试一次！');
+                    }
+                }));
+            };
+            bindSaveBtn(".to-zip", "zip");
+            bindSaveBtn(".to-text", "text");
+            bindSaveBtn(".to-png", "png");
+            const ButtonObsidian = parent_dom.querySelector(".to-obsidian");
+            if (ButtonObsidian) {
+                ButtonObsidian.addEventListener("click", throttle(async (event) => {
+                    try {
+                        (0,obsidianSaver/* selectObsidianVault */.yY)(async (vault, folder) => {
+                            const res = await (0,dealItem/* default */.A)(RichText, 'obsidian', event);
+                            if (!res)
+                                return;
+                            if (res.zip) {
+                                (0,obsidianSaver/* saveFile */.OJ)(res.zip, vault, folder, res.title);
+                            }
+                            else if (res.textString) {
+                                const zip = new jszip_min();
+                                zip.file("index.md", res.textString);
+                                (0,obsidianSaver/* saveFile */.OJ)(zip, vault, folder, res.title);
+                            }
+                            (0,toast/* showToast */.P)('✅ 导出成功！');
+                        });
+                    }
+                    catch (e) {
+                        console.error(e);
+                        (0,toast/* showToast */.P)('❌ 导出失败！');
+                    }
+                }));
+            }
         }
         catch (e) {
-            console.log(e);
+            console.error(e);
         }
     }
 };
-function throttle(fn, delay = 2000) {
-    let flag = true;
-    return function (...args) {
-        if (flag) {
-            flag = false;
-            setTimeout(() => {
-                flag = true;
-            }, delay);
-            return fn.apply(this, args); // 通过 apply 传递参数和 this
-        }
-    };
-}
+mountParseComments();
 setTimeout(() => {
-    let node = document.createElement("style"); //!important
+    let node = document.createElement("style");
     node.appendChild(document.createTextNode(`
+    /* ========== Minimal Mode: Joined Capsule Buttons ========== */
+    .zhcollect-minimal-btns {
+        user-select: none;
+    }
+    .zhcollect-btn {
+        width: 120px;
+        height: 2em;
+        background-color: rgba(85, 85, 85, 0.9);
+        color: white;
+        outline: none;
+        cursor: pointer;
+        border: none;
+        border-radius: 1em;
+        margin: 0 .2em 1em .2em;
+        font-size: .8em;
+        z-index: 999;
+    }
+    .zhcollect-btn:hover {
+        background-color: rgba(60, 60, 60, 0.95);
+    }
+
+    /* ========== Full Mode: Sidebar Layout Architecture ========== */
     .RichContent {
         position: relative;
     }
     .zhihubackup-wrap {
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.5s;
         position: absolute;
-        left: -10em;
+        left: -9.5em;
         top: -100px;
         height: 100%;
         min-height: 200px;
         user-select: none;
-        width: 12em;
+        width: 9.5em; /* 保证整体靠左侧外边距展开，绝不占用正文侧向空间 */
     }
-    .RichContent:hover .zhihubackup-wrap,
-    .ContentItem:hover .zhihubackup-wrap,
-    .Post-content:hover .zhihubackup-wrap,
-    .Post-RichTextContainer:hover .zhihubackup-wrap,
-    .zhihubackup-wrap:hover {
-        opacity: 1;
-        pointer-events: initial;
+
+    /* CRITICAL FIX: Allow Card containers to show overflowing sidebars without clipping or overlapping text! */
+    .Card:has(.zhihubackup-wrap) {
+        overflow: visible !important;
     }
-    .zhihubackup-container {
+
+    /* Default: Native Hover Mode */
+    .zhihubackup-wrap:not(.zhihubackup-chevron-mode) {
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+    .RichContent:hover .zhihubackup-wrap:not(.zhihubackup-chevron-mode),
+    .ContentItem:hover .zhihubackup-wrap:not(.zhihubackup-chevron-mode),
+    .AnswerItem:hover .zhihubackup-wrap:not(.zhihubackup-chevron-mode),
+    .ArticleItem:hover .zhihubackup-wrap:not(.zhihubackup-chevron-mode),
+    .PinItem:hover .zhihubackup-wrap:not(.zhihubackup-chevron-mode),
+    .Post-content:hover .zhihubackup-wrap:not(.zhihubackup-chevron-mode),
+    .Post-RichTextContainer:hover .zhihubackup-wrap:not(.zhihubackup-chevron-mode),
+    .List-item:hover .zhihubackup-wrap:not(.zhihubackup-chevron-mode),
+    .Card:hover .zhihubackup-wrap:not(.zhihubackup-chevron-mode),
+    .zhihubackup-wrap:not(.zhihubackup-chevron-mode):hover {
+        opacity: 1 !important;
+        pointer-events: initial !important;
+    }
+    .zhihubackup-wrap:not(.zhihubackup-chevron-mode) .zhihubackup-container {
         position: sticky;
         top: 120px;
-        /*display: flex;
-        flex-direction: column;
-        justify-content: space-around;
-        height: 22em;*/
         width: min-content;
         max-width: 8em;
         z-index: 2;
     }
+
+    /* Chevron Mode Sticky Box */
+    .zhihubackup-chevron-mode .zhihubackup-sticky-box {
+        position: sticky;
+        top: 200px; /* 悬浮吸顶高度（低于知乎顶部导航栏） */
+        display: flex;
+        flex-direction: row; /* 正向 Row：左侧为功能菜单，右侧紧贴正文的是 Chevron 按钮 */
+        align-items: flex-start;
+        justify-content: flex-end; /* 靠右对齐：触发按钮紧贴回答正文左边界 */
+        gap: 8px;
+        width: 100%;
+    }
+    .zhihubackup-chevron-mode .zhihubackup-trigger {
+        position: relative;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(60, 60, 60, 0.7);
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                    background 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                    transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                    box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                    color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        opacity: 0.35; /* 默认低透明度常驻浮现，能看清按钮位置但绝不刺眼 */
+        z-index: 3;
+        pointer-events: auto;
+        box-sizing: border-box;
+        width: 24px;
+        height: 38px;
+        border-radius: 12px;
+        flex-shrink: 0;
+        margin-right: 12px; /* ★ 向左平移12px骑在中线上（一半在卡片内，一半在卡片外） */
+    }
+    .zhihubackup-chevron-mode .zhihubackup-trigger::before {
+        content: '';
+        position: absolute;
+        top: -16px;
+        bottom: -16px;
+        left: -16px;
+        right: -16px;
+        border-radius: inherit;
+    }
+    .zhihubackup-chevron-mode .zhihubackup-trigger svg {
+        transition: transform 0.3s ease;
+    }
+    .zhihubackup-wrap.is-open .zhihubackup-trigger {
+        opacity: 0.85;
+    }
+
+    .zhihubackup-trigger:hover {
+        opacity: 1 !important;
+        background: rgba(255, 255, 255, 0.98);
+        border-color: rgba(23, 114, 246, 0.3);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14), 0 2px 6px rgba(0, 0, 0, 0.05);
+        transform: scale(1.18);
+        color: #1772f6;
+    }
+
+    .zhihubackup-chevron-mode .zhihubackup-container {
+        position: static;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+
+    .zhihubackup-wrap.is-open .zhihubackup-container {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .zhihubackup-wrap.is-open .zhihubackup-trigger svg {
+        transform: rotate(180deg);
+    }
+
     .zhihubackup-container .Button {
         width: 8em;
         margin-bottom: 8px;
@@ -6005,7 +5640,6 @@ setTimeout(() => {
     }
     .zhihubackup-container input,
     .zhihubackup-container textarea {
-        /*border: 1px solid #777;*/
         background-color: #0000;
         font-size: 14px;
         color: #1772f6;
@@ -6030,7 +5664,7 @@ setTimeout(() => {
         margin: 0 -20px -10px!important;
     }
     .to-screenshot.Post-content .RichContent-actions {
-        position: initial!important;/*专栏*/
+        position: initial!important;
         box-shadow: unset!important;
     }
     .to-screenshot.Post-content {
@@ -6044,12 +5678,12 @@ setTimeout(() => {
         align-items: center;
     }
     .to-screenshot.PinItem .RichText>.RichText:has(a[data-first-child]) {
-        display: flex;/*想法-卡片链接*/
+        display: flex;
         flex-direction: column;
         align-items: center;
     }
     .to-screenshot .ContentItem-actions>.ContentItem-actions {
-        margin-top: -10px!important;/*想法*/
+        margin-top: -10px!important;
     }
     .to-screenshot .css-m4psdq{
         opacity: 0;
@@ -6080,7 +5714,7 @@ setTimeout(() => {
         margin: 0 !important;
     }
     .to-screenshot.PinItem{
-        margin: 16px 0;/*想法增加留白*/
+        margin: 16px 0;
         padding: 0 16px;
         width: 690px;
     }
@@ -6088,13 +5722,10 @@ setTimeout(() => {
         max-width: 706px!important;
     }
     .to-screenshot .Recommendations-Main{
-        display: none;/*文章推荐阅读*/
+        display: none;
     }
     .to-screenshot .css-kt4t4n{
-        display: none;/*下方黏性评论栏*/
-    }
-    .to-screenshot .zhihubackup-container{
-        /*display: none;*/
+        display: none;
     }
     .RichContent:has(.ContentItem-more) .zhihubackup-wrap,
     .Post-RichTextContainer:has(.ContentItem-more) .zhihubackup-wrap{
@@ -6110,12 +5741,10 @@ setTimeout(() => {
         opacity: 1;
         pointer-events: initial;
     }
-    .Card:has(.zhihubackup-wrap){
-        overflow: visible!important;
-    }
     `));
     let head = document.querySelector("head");
-    head.appendChild(node);
+    if (head)
+        head.appendChild(node);
     if (window.innerWidth < 1275) {
         let node2 = document.createElement("style");
         node2.appendChild(document.createTextNode(`
@@ -6132,28 +5761,26 @@ setTimeout(() => {
             z-index: 2;
         }
         `));
-        head.appendChild(node2);
+        if (head)
+            head.appendChild(node2);
     }
 }, 30);
 setTimeout(() => {
     main();
-    mountParseComments();
     // @ts-ignore
     window.zhbf = main;
-    // 在window对象上创建存储空间
     // @ts-ignore
     window.ArticleComments = window.ArticleComments || {};
     document.querySelector('.Topstory-tabs')?.addEventListener('click', () => {
         setTimeout(registerBtn, 100);
     });
 }, 300);
-let timer = null;
+let scrollTimer = null;
 window.addEventListener("scroll", () => {
-    //debounce
-    if (timer) {
-        clearTimeout(timer);
+    if (scrollTimer) {
+        clearTimeout(scrollTimer);
     }
-    timer = setTimeout(main, 1000);
+    scrollTimer = setTimeout(main, 1000);
 });
 
 ;// ./src/entry.ts

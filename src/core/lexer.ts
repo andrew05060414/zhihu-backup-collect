@@ -133,9 +133,10 @@ export const lexer = (input: NodeListOf<Element> | Element[], type?: string): Le
             continue
         }
 
-        const tagName = node.nodeName.toLowerCase()
+        try {
+            const tagName = (node.nodeName || "").toLowerCase()
 
-        switch (tagName) {
+            switch (tagName) {
             case "h2": {
                 tokens.push({
                     type: TokenType.H2,
@@ -155,7 +156,7 @@ export const lexer = (input: NodeListOf<Element> | Element[], type?: string): Le
             }
 
             case "div": {
-                if (node.classList.contains("highlight")) {
+                if (node.classList?.contains("highlight")) {
                     const code = node.querySelector("pre > code")
                     const className = code?.className || ""
                     const language = className.match(/(?:language|lang)-([^\s]+)/)?.[1]
@@ -165,7 +166,7 @@ export const lexer = (input: NodeListOf<Element> | Element[], type?: string): Le
                         language,
                         dom: node
                     } as TokenCode)
-                } else if (node.classList.contains("RichText-LinkCardContainer")) {
+                } else if (node.classList?.contains("RichText-LinkCardContainer")) {
                     const link = node.querySelector("a") as HTMLAnchorElement | null
                     if (link) {
                         tokens.push({
@@ -185,7 +186,7 @@ export const lexer = (input: NodeListOf<Element> | Element[], type?: string): Le
                         local: false,
                         dom: node
                     } as TokenVideo)
-                } else if (node.classList.contains("RichText-ADLinkCardContainer")) {
+                } else if (node.classList?.contains("RichText-ADLinkCardContainer")) {
                     tokens.push({
                         type: TokenType.Text,
                         content: [{
@@ -215,7 +216,7 @@ export const lexer = (input: NodeListOf<Element> | Element[], type?: string): Le
 
             case "figure": {
                 const img = node.querySelector("img")
-                if (img?.classList.contains("ztext-gif")) {
+                if (img?.classList?.contains("ztext-gif")) {
                     const guessSrc = (src: string): string => {
                         return src.replace(/\..{3,4}$/g, ".gif")
                     }
@@ -286,7 +287,7 @@ export const lexer = (input: NodeListOf<Element> | Element[], type?: string): Le
 
             case "ol": {
                 // 检查是否为脚注/参考文献列表
-                if (node.classList.contains('ReferenceList')) {
+                if (node.classList?.contains('ReferenceList')) {
                     const childNodes = Array.from(node.querySelectorAll("li"))
                     const items: FootnoteItem[] = childNodes.map((li) => {
                         // 提取脚注编号，从 id="ref_1" 中提取 "1"
@@ -315,7 +316,7 @@ export const lexer = (input: NodeListOf<Element> | Element[], type?: string): Le
             }
 
             case "p": {
-                if (skipEmpty && (node.classList.contains('ztext-empty-paragraph') || !(node.textContent || "").trim()))
+                if (skipEmpty && (node.classList?.contains('ztext-empty-paragraph') || !(node.textContent || "").trim()))
                     break
 
                 tokens.push({
@@ -366,7 +367,21 @@ export const lexer = (input: NodeListOf<Element> | Element[], type?: string): Le
                 break
             }
         }
+    } catch (e) {
+        console.warn("处理节点时发生异常，降级为纯文本:", e)
+        if (node.textContent?.trim()) {
+            tokens.push({
+                type: TokenType.Text,
+                content: [{
+                    type: TokenType.PlainText,
+                    text: node.textContent.trim(),
+                    dom: node
+                } as TokenTextPlain],
+                dom: node as unknown as HTMLParagraphElement
+            } as TokenText)
+        }
     }
+}
     //console.log(tokens)
 
     return tokens
@@ -449,7 +464,7 @@ const Tokenize = (node: Element | string): TokenTextType[] => {
 
                 case "span": {
                     try {
-                        if (el.classList.contains("ztext-math")) {
+                        if (el.classList?.contains("ztext-math")) {
                             // 根据是否存在 MathJax_SVG_Display 类来判断是否为块级公式
                             const hasDisplayClass = el.querySelector(".MathJax_SVG_Display") !== null;
                             const content = (el.getAttribute("data-tex") || "").trim();
@@ -462,7 +477,7 @@ const Tokenize = (node: Element | string): TokenTextType[] => {
                                 display: isDisplayMath,
                                 dom: el,
                             } as TokenTextInlineMath)
-                        } else if (el.children[0]?.classList.contains("RichContent-EntityWord")) {//搜索词
+                        } else if (el.children?.[0]?.classList?.contains("RichContent-EntityWord")) {//搜索词
                             res.push({
                                 type: TokenType.PlainText,
                                 text: el.textContent || "",

@@ -9,6 +9,8 @@ export const UserScript = {
     "name": "知乎备份剪藏",
     "namespace": "qtqz",
     "source": "https://github.com/qtqz/zhihu-backup-collect",
+    "downloadURL": "https://raw.githubusercontent.com/andrew05060414/zhihu-backup-collect/andrew-main/dist/tampermonkey-script.js",
+    "updateURL": "https://raw.githubusercontent.com/andrew05060414/zhihu-backup-collect/andrew-main/dist/tampermonkey-script.js",
     "version": packageInfo.version,
     "description": "将你喜欢的知乎回答/文章/想法保存为 markdown / zip / png",
     "author": packageInfo.author,
@@ -30,6 +32,7 @@ export const UserScript = {
         "GM_setValue",
         "GM_getValue",
         "GM_registerMenuCommand",
-        "GM_unregisterMenuCommand"
+        "GM_unregisterMenuCommand",
+        "GM_setClipboard"
     ]
 }
