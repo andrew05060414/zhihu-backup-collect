@@ -16,7 +16,11 @@ async function loadAllAnswers(onProgress: (n: number) => void) {
     while (stable < 3) {
         const before = answerItems().length
         if (before >= MAX_ANSWERS) break
+        // 已在底部时再 scrollTo 不会产生 scroll 事件，知乎就不会加载下一批；先上移一点再到底，并补发事件
+        window.scrollBy(0, -800)
+        await sleep(100)
         window.scrollTo(0, document.documentElement.scrollHeight)
+        window.dispatchEvent(new Event("scroll"))
         await sleep(1500)
         const after = answerItems().length
         stable = after === before ? stable + 1 : 0

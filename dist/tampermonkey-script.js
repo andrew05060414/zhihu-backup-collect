@@ -4,7 +4,7 @@
 // @source       https://github.com/qtqz/zhihu-backup-collect
 // @downloadURL  https://raw.githubusercontent.com/andrew05060414/zhihu-backup-collect/andrew-main/dist/tampermonkey-script.js
 // @updateURL    https://raw.githubusercontent.com/andrew05060414/zhihu-backup-collect/andrew-main/dist/tampermonkey-script.js
-// @version      0.12.0
+// @version      0.12.1
 // @description  将你喜欢的知乎回答/文章/想法保存为 markdown / zip / png
 // @author       qtqz
 // @match        https://www.zhihu.com/follow
@@ -3448,7 +3448,11 @@ async function loadAllAnswers(onProgress) {
         const before = answerItems().length;
         if (before >= MAX_ANSWERS)
             break;
+        // 已在底部时再 scrollTo 不会产生 scroll 事件，知乎就不会加载下一批；先上移一点再到底，并补发事件
+        window.scrollBy(0, -800);
+        await sleep(100);
         window.scrollTo(0, document.documentElement.scrollHeight);
+        window.dispatchEvent(new Event("scroll"));
         await sleep(1500);
         const after = answerItems().length;
         stable = after === before ? stable + 1 : 0;
