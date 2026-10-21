@@ -4,7 +4,7 @@
 // @source       https://github.com/qtqz/zhihu-backup-collect
 // @downloadURL  https://raw.githubusercontent.com/andrew05060414/zhihu-backup-collect/andrew-main/dist/tampermonkey-script.js
 // @updateURL    https://raw.githubusercontent.com/andrew05060414/zhihu-backup-collect/andrew-main/dist/tampermonkey-script.js
-// @version      0.11.7
+// @version      0.12.0
 // @description  将你喜欢的知乎回答/文章/想法保存为 markdown / zip / png
 // @author       qtqz
 // @match        https://www.zhihu.com/follow
@@ -3430,6 +3430,134 @@ let __webpack_exports__ = {};
 var FileSaver_min = __webpack_require__(972);
 // EXTERNAL MODULE: ./src/dealItem.ts
 var dealItem = __webpack_require__(331);
+// EXTERNAL MODULE: ./src/core/toast.ts
+var toast = __webpack_require__(197);
+;// ./src/copyAll.ts
+
+
+const MAX_ANSWERS = 300;
+const BTN_CLASS = "zhb-copy-all";
+const LABEL = "复制本页全部回答为 Markdown";
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+const answerItems = () => Array.from(document.querySelectorAll(".AnswerItem"));
+// 问题页：/question/123 或 /question/123/answers/updated；单个回答页不加
+const isQuestionListPage = () => /^\/question\/\d+(\/answers\/\w+)?\/?$/.test(location.pathname);
+async function loadAllAnswers(onProgress) {
+    let stable = 0;
+    while (stable < 3) {
+        const before = answerItems().length;
+        if (before >= MAX_ANSWERS)
+            break;
+        window.scrollTo(0, document.documentElement.scrollHeight);
+        await sleep(1500);
+        const after = answerItems().length;
+        stable = after === before ? stable + 1 : 0;
+        onProgress(after);
+    }
+}
+async function expandAll() {
+    for (const item of answerItems()) {
+        item.querySelectorAll(".ContentItem-more, .ContentItem-expandButton").forEach((b) => b.click());
+    }
+    await sleep(600);
+}
+// 批量复制时临时关闭「元信息」「评论」，避免每条回答都带 frontmatter 或去抓评论
+async function withoutFmAndComments(fn) {
+    let fm, cm;
+    try {
+        // @ts-ignore
+        fm = GM_getValue("copy_save_fm");
+        cm = GM_getValue("copy_save_cm");
+        // @ts-ignore
+        GM_setValue("copy_save_fm", false);
+        GM_setValue("copy_save_cm", false);
+    }
+    catch (e) {
+        console.warn(e);
+    }
+    try {
+        return await fn();
+    }
+    finally {
+        try {
+            // @ts-ignore
+            GM_setValue("copy_save_fm", fm);
+            GM_setValue("copy_save_cm", cm);
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+}
+async function collect(title, onProgress) {
+    const items = answerItems();
+    const parts = [];
+    await withoutFmAndComments(async () => {
+        for (let i = 0; i < items.length; i++) {
+            onProgress(i, items.length);
+            const item = items[i];
+            const rich = item.querySelector(".RichText");
+            if (!rich)
+                continue;
+            try {
+                const res = await (0,dealItem/* default */.A)(rich, "copy");
+                if (!res || !res.textString)
+                    continue;
+                const body = res.textString.replace(/^# .*\n\n?/, "");
+                const author = item.querySelector(".AuthorInfo-name")?.textContent?.trim() || "匿名用户";
+                const upvote = item.querySelector('meta[itemprop="upvoteCount"]')?.content;
+                const url = item.querySelector('meta[itemprop="url"]')?.content;
+                parts.push(`## 回答 ${parts.length + 1}：${author}${upvote ? `（${upvote} 赞同）` : ""}\n\n` +
+                    (url ? `> ${url}\n\n` : "") + body);
+            }
+            catch (e) {
+                console.warn("复制第 " + (i + 1) + " 条回答失败", e);
+            }
+        }
+    });
+    const head = `# ${title}\n\n> 来源：${location.origin}${location.pathname}　共 ${parts.length} 条回答\n`;
+    return { text: [head].concat(parts).join("\n\n---\n\n"), count: parts.length };
+}
+async function run(btn, copyText) {
+    if (btn.dataset.busy)
+        return;
+    btn.dataset.busy = "1";
+    const title = document.querySelector(".QuestionHeader-title")?.textContent?.trim() || document.title;
+    try {
+        btn.textContent = "加载回答中…";
+        await loadAllAnswers(n => { btn.textContent = `加载回答中… ${n}`; });
+        btn.textContent = "展开中…";
+        await expandAll();
+        const { text, count } = await collect(title, (d, t) => { btn.textContent = `整理中 ${d + 1}/${t}`; });
+        if (!count)
+            throw new Error("没有可复制的回答");
+        await copyText(text);
+        btn.textContent = `已复制 ${count} 条回答 ✅`;
+        (0,toast/* showToast */.P)(`✅ 已复制 ${count} 条回答（${text.length} 字）`);
+    }
+    catch (e) {
+        console.log(e);
+        btn.textContent = "发生错误❌ 请看控制台";
+    }
+    finally {
+        setTimeout(() => { btn.textContent = LABEL; delete btn.dataset.busy; }, 4000);
+    }
+}
+// 在问题标题下方插入按钮；由 MutationObserver 反复调用，已存在则跳过
+function mountCopyAll(copyText) {
+    if (!isQuestionListPage())
+        return;
+    const titleEl = document.querySelector(".QuestionHeader-title");
+    if (!titleEl || document.querySelector("." + BTN_CLASS))
+        return;
+    const btn = document.createElement("button");
+    btn.className = `${BTN_CLASS} Button Button--blue`;
+    btn.style.cssText = "margin:8px 0;font-size:13px;";
+    btn.textContent = LABEL;
+    btn.addEventListener("click", () => run(btn, copyText));
+    titleEl.insertAdjacentElement("afterend", btn);
+}
+
 ;// ./node_modules/.pnpm/modern-screenshot@4.7.0/node_modules/modern-screenshot/dist/index.mjs
 function changeJpegDpi(uint8Array, dpi) {
   uint8Array[13] = 1;
@@ -5618,6 +5746,7 @@ var obsidianSaver = __webpack_require__(784);
 
 
 
+
 /**
  * 适配复杂的想法：转发、带卡片链接、带@
  * 页：推送页，个人/机构主页，回答页，问题页，文章页，想法页，收藏夹页，搜索结果页
@@ -6241,6 +6370,7 @@ new MutationObserver(() => {
     domTimer = setTimeout(() => {
         domTimer = null;
         main();
+        mountCopyAll(copyText);
     }, 120);
 }).observe(document, { childList: true, subtree: true });
 main();

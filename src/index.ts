@@ -1,5 +1,6 @@
 import { saveAs } from "file-saver"
 import dealItem from "./dealItem"
+import { mountCopyAll } from "./copyAll"
 import * as JSZip from "jszip"
 import { domToPng } from "modern-screenshot"
 import { getCommentSwitch } from "./core/utils"
@@ -642,6 +643,7 @@ new MutationObserver(() => {
     domTimer = setTimeout(() => {
         domTimer = null
         main()
+        mountCopyAll(copyText)
     }, 120)
 }).observe(document, { childList: true, subtree: true })
 main()
