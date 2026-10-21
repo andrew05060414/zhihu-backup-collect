@@ -634,3 +634,14 @@ window.addEventListener("scroll", () => {
     }
     timer = setTimeout(main, 1000)
 })
+
+// 回答/文章出现（首屏、懒加载、站内跳转）后很快补上按钮，不再等滚动停止
+let domTimer: any = null
+new MutationObserver(() => {
+    if (domTimer) return
+    domTimer = setTimeout(() => {
+        domTimer = null
+        main()
+    }, 120)
+}).observe(document, { childList: true, subtree: true })
+main()

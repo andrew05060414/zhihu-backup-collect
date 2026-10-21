@@ -24,7 +24,10 @@ export const UserScript = {
         "https:\/\/www.zhihu.com/collection/*",
         "https:\/\/zhuanlan.zhihu.com/p/*",
         "https:\/\/www.zhihu.com/search*content*",
-        "https:\/\/www.zhihu.com/"
+        "https:\/\/www.zhihu.com/",
+        "https:\/\/www.zhihu.com/hot",
+        "https:\/\/www.zhihu.com/topic/*",
+        "https:\/\/www.zhihu.com/column/*"
     ],
     "license": packageInfo.license,
     "icon": "https://static.zhihu.com/heifetz/favicon.ico",
