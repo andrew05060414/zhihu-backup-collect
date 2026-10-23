@@ -4,7 +4,7 @@
 // @source       https://github.com/qtqz/zhihu-backup-collect
 // @downloadURL  https://raw.githubusercontent.com/andrew05060414/zhihu-backup-collect/andrew-main/dist/tampermonkey-script.js
 // @updateURL    https://raw.githubusercontent.com/andrew05060414/zhihu-backup-collect/andrew-main/dist/tampermonkey-script.js
-// @version      0.12.1
+// @version      0.12.2
 // @description  将你喜欢的知乎回答/文章/想法保存为 markdown / zip / png
 // @author       qtqz
 // @match        https://www.zhihu.com/follow
@@ -5943,10 +5943,8 @@ const main = async () => {
                 RichText.closest('.Card');
             if (!parent_dom)
                 continue;
-            if (parent_dom.querySelector('.Catalog')) {
-                aButtonContainer.firstElementChild.style.position = 'fixed';
-                aButtonContainer.firstElementChild.style.top = 'unset';
-                aButtonContainer.firstElementChild.style.bottom = '60px';
+            if (parent_dom.querySelector('.Catalog') || document.querySelector('.Catalog')) {
+                aButtonContainer.classList.add('has-catalog-right');
             }
             let p = RichText.closest('.RichContent') || RichText.closest('.Post-RichTextContainer');
             if (!p)
@@ -6174,7 +6172,8 @@ function throttle(fn, delay = 2000) {
 setTimeout(() => {
     let node = document.createElement("style"); //!important
     node.appendChild(document.createTextNode(`
-    .RichContent {
+    .RichContent,
+    .Post-RichTextContainer {
         position: relative;
     }
     .zhihubackup-wrap {
@@ -6189,6 +6188,12 @@ setTimeout(() => {
         user-select: none;
         width: 12em;
     }
+    .Post-content:has(.Catalog) .zhihubackup-wrap,
+    .Post-Main:has(.Catalog) .zhihubackup-wrap,
+    .zhihubackup-wrap.has-catalog-right {
+        left: calc(100% + 16px) !important;
+        right: unset !important;
+    }
     .RichContent:hover .zhihubackup-wrap,
     .ContentItem:hover .zhihubackup-wrap,
     .Post-content:hover .zhihubackup-wrap,
@@ -6200,13 +6205,18 @@ setTimeout(() => {
     .zhihubackup-container {
         position: sticky;
         top: 120px;
-        /*display: flex;
+        display: flex;
         flex-direction: column;
-        justify-content: space-around;
-        height: 22em;*/
         width: min-content;
         max-width: 8em;
         z-index: 2;
+    }
+    .Post-content:has(.Catalog) .zhihubackup-container,
+    .Post-Main:has(.Catalog) .zhihubackup-container,
+    .zhihubackup-wrap.has-catalog-right .zhihubackup-container {
+        position: sticky !important;
+        top: 120px !important;
+        bottom: unset !important;
     }
     .zhihubackup-container .Button {
         width: 8em;
