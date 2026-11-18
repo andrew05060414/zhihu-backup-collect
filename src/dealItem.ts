@@ -21,14 +21,21 @@ function detectScene(): string | null {
     else if (pathname.includes("/people") || pathname.includes("/org")) scene = "people"
     else if (pathname.includes("/question") && !pathname.includes('answer')) scene = "question"
     else if (pathname.includes("/question") && pathname.includes('answer')) scene = "answer"
+    else if (pathname.startsWith("/answer/")) scene = "answer"
     else if (pathname.includes("/pin")) scene = "pin"
     else if (location.hostname == "zhuanlan.zhihu.com") scene = "article"
-    else if (pathname.includes("/collection")) scene = "collection"
-    else if (pathname.includes("/search")) scene = "collection"
-    else if (location.href == "https://www.zhihu.com/") scene = "collection"//搜索、推荐、收藏夹似乎一样
-    else console.log("未知场景")
+    else if (
+        pathname === "/" ||
+        pathname.startsWith("/hot") ||
+        pathname.includes("/collection") ||
+        pathname.includes("/search") ||
+        pathname.includes("/topic") ||
+        pathname.includes("/column") ||
+        pathname.includes("/ring-feeds")
+    ) scene = "collection" // 推荐、热榜、搜索、话题、圈子、收藏夹均为列表流卡片结构
+    else console.log("未知场景:", pathname)
     //https://www.zhihu.com/question/2377606804/answers/updated 按时间排序的问题
-    if (pathname.slice(0, 9) == "/question" && !pathname.includes('updated')) scene = "question"
+    if (pathname.slice(0, 9) == "/question" && !pathname.includes('/answer/')) scene = "question"
     return scene
 }
 
@@ -47,7 +54,7 @@ function detectType(dom: HTMLElement, bt?: string, ev?: Event): string | null {
         }
         else {
             const target = ev.target instanceof Element ? ev.target : null
-            const zhw = target?.closest('.zhihubackup-wrap')
+            const zhw = target?.closest('.zhihubackup-wrap, .zhcollect-minimal-btns')
             const textarea = zhw?.querySelector('textarea') as HTMLTextAreaElement | null
             const fa = zhw?.closest('.ContentItem') || zhw?.closest('.Post-content') || zhw?.closest('.HotLanding-contentItem')
             if (!fa || !textarea || !bt) {
@@ -273,9 +280,9 @@ export default async (dom: HTMLElement, button?: string, event?: Event): Promise
 
                 const closedMessage = openComment?.querySelector('.css-189h5o3')
                 if (closedMessage) {
-                    let t = '**' + (closedMessage.textContent || "") + '**' //评论区已关闭|暂无评论
-                    if (button == 'text' || button == 'copy') commentText = t
-                    else if (button == 'zip') zip?.file("comments.md", t)
+                        let t = '**' + (closedMessage.textContent || "") + '**' //评论区已关闭|暂无评论
+                        if (button == 'text' || button == 'copy' || button == 'copy_context' || button == 'copy_content') commentText = t
+                        else if (button == 'zip') zip?.file("comments.md", t)
                 }
                 else {
                     if (openComment && openComment.querySelector('.css-1tdhe7b')) tip = '**评论内容由作者筛选后展示**\n\n'
@@ -307,14 +314,15 @@ export default async (dom: HTMLElement, button?: string, event?: Event): Promise
                                     hideObsidianModal()
                                     return alert('已【暂存此页评论】，由于这次是自定义文件夹保存，请再次手动保存文件。')
                                 }
-                                const retryButton = p.querySelector(`.zhihubackup-wrap .to-${button}`) as HTMLElement | null
+                                const retrySelector = button === 'copy_context' ? '.to-copy-context' : button === 'copy_content' ? '.to-copy-content' : `.to-${button}`
+                                const retryButton = p.querySelector(`.zhihubackup-wrap ${retrySelector}, .zhcollect-minimal-btns ${retrySelector}`) as HTMLElement | null
                                 retryButton?.click()
                             }, 1900)
                             return 'return'
                         }
                     }
                     let num_text = tip + '共 ' + comment_num + ' 条评论，已存 ' + commentsData.size + ' 条' + '\n\n'
-                    if (button == 'text' || button == 'copy') {
+                    if (button == 'text' || button == 'copy' || button == 'copy_context' || button == 'copy_content') {
                         // 准备添加第三种图片归宿，完全舍弃
                         [commentText, commentsImgs] = renderAllComments(commentsData, false)
                         commentText = num_text + commentText
@@ -352,7 +360,7 @@ export default async (dom: HTMLElement, button?: string, event?: Event): Promise
     }
 
 
-    if (button == 'copy') {
+    if (button == 'copy' || button == 'copy_context' || button == 'copy_content') {
         try {
             // @ts-ignore
             var copy_save_fm = GM_getValue("copy_save_fm"),
@@ -366,8 +374,9 @@ export default async (dom: HTMLElement, button?: string, event?: Event): Promise
             md = md.concat(originPinMD) //解决保存转发的想法异常
         }
 
-        // 统一添加 Markdown 一级标题（想法若无特定标题则保留正文结构）
-        const markdownTitle = title && title !== "无标题" && type !== 'pin' ? `# ${title}` : ""
+        // 复制为 Markdown / 复制标题+正文 时添加一级标题；极简模式「复制正文」(copy_content) 仅保留正文
+        const includeTitle = button !== 'copy_content'
+        const markdownTitle = includeTitle && title && title !== "无标题" && type !== 'pin' ? `# ${title}` : ""
         if (markdownTitle) {
             md = [markdownTitle].concat(md)
         }

@@ -23,11 +23,14 @@ export const UserScript = {
         "https:\/\/www.zhihu.com/answer/*",
         "https:\/\/www.zhihu.com/collection/*",
         "https:\/\/zhuanlan.zhihu.com/p/*",
-        "https:\/\/www.zhihu.com/search*content*",
+        "https:\/\/www.zhihu.com/search*",
         "https:\/\/www.zhihu.com/",
-        "https:\/\/www.zhihu.com/hot",
+        "https:\/\/www.zhihu.com/?*",
+        "https:\/\/www.zhihu.com/hot*",
         "https:\/\/www.zhihu.com/topic/*",
-        "https:\/\/www.zhihu.com/column/*"
+        "https:\/\/www.zhihu.com/column/*",
+        "https:\/\/www.zhihu.com/ring-feeds*",
+        "https:\/\/www.zhihu.com/column-square*"
     ],
     "license": packageInfo.license,
     "icon": "https://static.zhihu.com/heifetz/favicon.ico",

@@ -1,5 +1,6 @@
 import dealItem from "./dealItem"
 import { showToast } from "./core/toast"
+import { findQuestionTitleElement, findQuestionTitleText } from "./core/utils"
 
 const MAX_ANSWERS = 300
 const BTN_CLASS = "zhb-copy-all"
@@ -86,7 +87,7 @@ async function collect(title: string, onProgress: (done: number, total: number) 
 async function run(btn: HTMLElement, copyText: (t: string) => Promise<void>) {
     if (btn.dataset.busy) return
     btn.dataset.busy = "1"
-    const title = document.querySelector(".QuestionHeader-title")?.textContent?.trim() || document.title
+    const title = findQuestionTitleText(document) || document.title.replace(/\s*[-|｜]\s*知乎.*$/, "").trim()
     try {
         btn.textContent = "加载回答中…"
         await loadAllAnswers(n => { btn.textContent = `加载回答中… ${n}` })
@@ -105,15 +106,19 @@ async function run(btn: HTMLElement, copyText: (t: string) => Promise<void>) {
     }
 }
 
-// 在问题标题下方插入按钮；由 MutationObserver 反复调用，已存在则跳过
+// 在问题标题下方插入按钮；由 MutationObserver 反复调用，已存在则跳过（兼容新版 T-Shape 与经典布局）
 export function mountCopyAll(copyText: (t: string) => Promise<void>) {
     if (!isQuestionListPage()) return
-    const titleEl = document.querySelector(".QuestionHeader-title")
+    const titleEl = findQuestionTitleElement(document)
     if (!titleEl || document.querySelector("." + BTN_CLASS)) return
     const btn = document.createElement("button")
+    btn.type = "button"
     btn.className = `${BTN_CLASS} Button Button--blue`
-    btn.style.cssText = "margin:8px 0;font-size:13px;"
+    btn.style.cssText = "margin:10px 0 4px;font-size:13px;padding:0 14px;height:32px;line-height:30px;border-radius:6px;cursor:pointer;"
     btn.textContent = LABEL
     btn.addEventListener("click", () => run(btn, copyText))
-    titleEl.insertAdjacentElement("afterend", btn)
+    const anchor = titleEl.nextElementSibling?.classList.contains("QuestionTime-xiu")
+        ? titleEl.nextElementSibling
+        : titleEl
+    anchor.insertAdjacentElement("afterend", btn)
 }

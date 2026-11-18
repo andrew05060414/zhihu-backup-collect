@@ -4,7 +4,7 @@
 // @source       https://github.com/qtqz/zhihu-backup-collect
 // @downloadURL  https://raw.githubusercontent.com/andrew05060414/zhihu-backup-collect/andrew-main/dist/tampermonkey-script.js
 // @updateURL    https://raw.githubusercontent.com/andrew05060414/zhihu-backup-collect/andrew-main/dist/tampermonkey-script.js
-// @version      0.12.2
+// @version      0.13.0
 // @description  将你喜欢的知乎回答/文章/想法保存为 markdown / zip / png
 // @author       qtqz
 // @match        https://www.zhihu.com/follow
@@ -15,11 +15,14 @@
 // @match        https://www.zhihu.com/answer/*
 // @match        https://www.zhihu.com/collection/*
 // @match        https://zhuanlan.zhihu.com/p/*
-// @match        https://www.zhihu.com/search*content*
+// @match        https://www.zhihu.com/search*
 // @match        https://www.zhihu.com/
-// @match        https://www.zhihu.com/hot
+// @match        https://www.zhihu.com/?*
+// @match        https://www.zhihu.com/hot*
 // @match        https://www.zhihu.com/topic/*
 // @match        https://www.zhihu.com/column/*
+// @match        https://www.zhihu.com/ring-feeds*
+// @match        https://www.zhihu.com/column-square*
 // @license      MIT
 // @icon         https://static.zhihu.com/heifetz/favicon.ico
 // @grant        GM_setValue
@@ -2351,6 +2354,31 @@ const ZhihuLink2NormalLink = (link) => {
  * @param dom - The dom to get title.
  * @returns The title of the dom.
  */
+const findQuestionTitleElement = (root = document) => {
+    const candidates = root.querySelectorAll("h1.QuestionHeader-title, .QuestionHeader-title, .QuestionPage [data-zop-question] > h1, [data-za-detail-view-path-module='QuestionDescription'] [data-zop-question] > h1, [data-za-detail-view-path-module='QuestionDescription'] h1");
+    for (const el of Array.from(candidates)) {
+        if (el instanceof HTMLElement && !el.closest("header.AppHeader")) {
+            return el;
+        }
+    }
+    return null;
+};
+const findQuestionTitleText = (root = document) => {
+    const zopEl = root.querySelector(".QuestionPage [data-zop-question], [data-za-detail-view-path-module='QuestionDescription'] [data-zop-question]");
+    const zopJson = parseJsonObject(zopEl?.getAttribute("data-zop-question") || null);
+    if (typeof zopJson?.title === "string" && zopJson.title.trim()) {
+        return zopJson.title.trim();
+    }
+    const titleEl = findQuestionTitleElement(root);
+    if (titleEl?.textContent?.trim()) {
+        return titleEl.textContent.trim();
+    }
+    const metaName = root.querySelector("meta[itemprop=name]");
+    if (metaName?.content?.trim()) {
+        return metaName.content.trim();
+    }
+    return "";
+};
 const getTitle = (dom, scene, type) => {
     let t = "";
     try {
@@ -2383,11 +2411,7 @@ const getTitle = (dom, scene, type) => {
         }
         else if (scene == "question" || scene == "answer") {
             const page = dom.closest('.QuestionPage') || document;
-            t = page.querySelector("meta[itemprop=name]")?.content ||
-                document.querySelector("h1.QuestionHeader-title")?.textContent ||
-                document.querySelector(".QuestionHeader-title")?.textContent ||
-                page.querySelector("h1")?.textContent ||
-                "";
+            t = findQuestionTitleText(page) || findQuestionTitleText(document);
         }
         else if (scene == "article") {
             t = textOf(dom.closest('.Post-Main')?.querySelector("h1.Post-Title")) ||
@@ -2681,6 +2705,7 @@ const getLocation = (dom, scene, type) => {
 
 /* harmony export */ __webpack_require__.d(__webpack_exports__, [
 /* harmony export */   "AP", 0, /* binding */ getURL,
+/* harmony export */   "EH", 0, /* binding */ findQuestionTitleElement,
 /* harmony export */   "IQ", 0, /* binding */ ZhihuLink2NormalLink,
 /* harmony export */   "LK", 0, /* binding */ getTitle,
 /* harmony export */   "Nz", 0, /* binding */ sanitizeFilename,
@@ -2690,7 +2715,8 @@ const getLocation = (dom, scene, type) => {
 /* harmony export */   "aJ", 0, /* binding */ getUpvote,
 /* harmony export */   "g$", 0, /* binding */ getLocation,
 /* harmony export */   "kn", 0, /* binding */ getAuthor,
-/* harmony export */   "mK", 0, /* binding */ getCommentSwitch
+/* harmony export */   "mK", 0, /* binding */ getCommentSwitch,
+/* harmony export */   "vg", 0, /* binding */ findQuestionTitleText
 /* harmony export */ ]);
 
 
@@ -2727,20 +2753,24 @@ function detectScene() {
         scene = "question";
     else if (pathname.includes("/question") && pathname.includes('answer'))
         scene = "answer";
+    else if (pathname.startsWith("/answer/"))
+        scene = "answer";
     else if (pathname.includes("/pin"))
         scene = "pin";
     else if (location.hostname == "zhuanlan.zhihu.com")
         scene = "article";
-    else if (pathname.includes("/collection"))
-        scene = "collection";
-    else if (pathname.includes("/search"))
-        scene = "collection";
-    else if (location.href == "https://www.zhihu.com/")
-        scene = "collection"; //搜索、推荐、收藏夹似乎一样
+    else if (pathname === "/" ||
+        pathname.startsWith("/hot") ||
+        pathname.includes("/collection") ||
+        pathname.includes("/search") ||
+        pathname.includes("/topic") ||
+        pathname.includes("/column") ||
+        pathname.includes("/ring-feeds"))
+        scene = "collection"; // 推荐、热榜、搜索、话题、圈子、收藏夹均为列表流卡片结构
     else
-        console.log("未知场景");
+        console.log("未知场景:", pathname);
     //https://www.zhihu.com/question/2377606804/answers/updated 按时间排序的问题
-    if (pathname.slice(0, 9) == "/question" && !pathname.includes('updated'))
+    if (pathname.slice(0, 9) == "/question" && !pathname.includes('/answer/'))
         scene = "question";
     return scene;
 }
@@ -2762,7 +2792,7 @@ function detectType(dom, bt, ev) {
         }
         else {
             const target = ev.target instanceof Element ? ev.target : null;
-            const zhw = target?.closest('.zhihubackup-wrap');
+            const zhw = target?.closest('.zhihubackup-wrap, .zhcollect-minimal-btns');
             const textarea = zhw?.querySelector('textarea');
             const fa = zhw?.closest('.ContentItem') || zhw?.closest('.Post-content') || zhw?.closest('.HotLanding-contentItem');
             if (!fa || !textarea || !bt) {
@@ -2978,7 +3008,7 @@ function detectType(dom, bt, ev) {
                 const closedMessage = openComment?.querySelector('.css-189h5o3');
                 if (closedMessage) {
                     let t = '**' + (closedMessage.textContent || "") + '**'; //评论区已关闭|暂无评论
-                    if (button == 'text' || button == 'copy')
+                    if (button == 'text' || button == 'copy' || button == 'copy_context' || button == 'copy_content')
                         commentText = t;
                     else if (button == 'zip')
                         zip?.file("comments.md", t);
@@ -3014,14 +3044,15 @@ function detectType(dom, bt, ev) {
                                     (0,_core_obsidianSaver__WEBPACK_IMPORTED_MODULE_7__/* .hideObsidianModal */ .XR)();
                                     return alert('已【暂存此页评论】，由于这次是自定义文件夹保存，请再次手动保存文件。');
                                 }
-                                const retryButton = p.querySelector(`.zhihubackup-wrap .to-${button}`);
+                                const retrySelector = button === 'copy_context' ? '.to-copy-context' : button === 'copy_content' ? '.to-copy-content' : `.to-${button}`;
+                                const retryButton = p.querySelector(`.zhihubackup-wrap ${retrySelector}, .zhcollect-minimal-btns ${retrySelector}`);
                                 retryButton?.click();
                             }, 1900);
                             return 'return';
                         }
                     }
                     let num_text = tip + '共 ' + comment_num + ' 条评论，已存 ' + commentsData.size + ' 条' + '\n\n';
-                    if (button == 'text' || button == 'copy') {
+                    if (button == 'text' || button == 'copy' || button == 'copy_context' || button == 'copy_content') {
                         // 准备添加第三种图片归宿，完全舍弃
                         [commentText, commentsImgs] = (0,_core_renderComments__WEBPACK_IMPORTED_MODULE_5__/* .renderAllComments */ .Y)(commentsData, false);
                         commentText = num_text + commentText;
@@ -3061,7 +3092,7 @@ function detectType(dom, bt, ev) {
             alert('主要工作已完成，但是评论保存出错了');
         }
     };
-    if (button == 'copy') {
+    if (button == 'copy' || button == 'copy_context' || button == 'copy_content') {
         try {
             // @ts-ignore
             var copy_save_fm = GM_getValue("copy_save_fm"), 
@@ -3075,8 +3106,9 @@ function detectType(dom, bt, ev) {
         if (type == "pin" && originPin) {
             md = md.concat(originPinMD); //解决保存转发的想法异常
         }
-        // 统一添加 Markdown 一级标题（想法若无特定标题则保留正文结构）
-        const markdownTitle = title && title !== "无标题" && type !== 'pin' ? `# ${title}` : "";
+        // 复制为 Markdown / 复制标题+正文 时添加一级标题；极简模式「复制正文」(copy_content) 仅保留正文
+        const includeTitle = button !== 'copy_content';
+        const markdownTitle = includeTitle && title && title !== "无标题" && type !== 'pin' ? `# ${title}` : "";
         if (markdownTitle) {
             md = [markdownTitle].concat(md);
         }
@@ -3432,7 +3464,10 @@ var FileSaver_min = __webpack_require__(972);
 var dealItem = __webpack_require__(331);
 // EXTERNAL MODULE: ./src/core/toast.ts
 var toast = __webpack_require__(197);
+// EXTERNAL MODULE: ./src/core/utils.ts
+var utils = __webpack_require__(379);
 ;// ./src/copyAll.ts
+
 
 
 const MAX_ANSWERS = 300;
@@ -3526,7 +3561,7 @@ async function run(btn, copyText) {
     if (btn.dataset.busy)
         return;
     btn.dataset.busy = "1";
-    const title = document.querySelector(".QuestionHeader-title")?.textContent?.trim() || document.title;
+    const title = (0,utils/* findQuestionTitleText */.vg)(document) || document.title.replace(/\s*[-|｜]\s*知乎.*$/, "").trim();
     try {
         btn.textContent = "加载回答中…";
         await loadAllAnswers(n => { btn.textContent = `加载回答中… ${n}`; });
@@ -3547,19 +3582,23 @@ async function run(btn, copyText) {
         setTimeout(() => { btn.textContent = LABEL; delete btn.dataset.busy; }, 4000);
     }
 }
-// 在问题标题下方插入按钮；由 MutationObserver 反复调用，已存在则跳过
+// 在问题标题下方插入按钮；由 MutationObserver 反复调用，已存在则跳过（兼容新版 T-Shape 与经典布局）
 function mountCopyAll(copyText) {
     if (!isQuestionListPage())
         return;
-    const titleEl = document.querySelector(".QuestionHeader-title");
+    const titleEl = (0,utils/* findQuestionTitleElement */.EH)(document);
     if (!titleEl || document.querySelector("." + BTN_CLASS))
         return;
     const btn = document.createElement("button");
+    btn.type = "button";
     btn.className = `${BTN_CLASS} Button Button--blue`;
-    btn.style.cssText = "margin:8px 0;font-size:13px;";
+    btn.style.cssText = "margin:10px 0 4px;font-size:13px;padding:0 14px;height:32px;line-height:30px;border-radius:6px;cursor:pointer;";
     btn.textContent = LABEL;
     btn.addEventListener("click", () => run(btn, copyText));
-    titleEl.insertAdjacentElement("afterend", btn);
+    const anchor = titleEl.nextElementSibling?.classList.contains("QuestionTime-xiu")
+        ? titleEl.nextElementSibling
+        : titleEl;
+    anchor.insertAdjacentElement("afterend", btn);
 }
 
 ;// ./node_modules/.pnpm/modern-screenshot@4.7.0/node_modules/modern-screenshot/dist/index.mjs
@@ -5239,8 +5278,6 @@ async function domToWebp(node, options) {
 
 
 
-// EXTERNAL MODULE: ./src/core/utils.ts
-var utils = __webpack_require__(379);
 ;// ./src/core/parseComments.js
 // 在window对象上创建存储空间
 //window.ArticleComments = window.ArticleComments || {};
@@ -5753,19 +5790,32 @@ var obsidianSaver = __webpack_require__(784);
 
 /**
  * 适配复杂的想法：转发、带卡片链接、带@
- * 页：推送页，个人/机构主页，回答页，问题页，文章页，想法页，收藏夹页，搜索结果页
- */
-// @grant        GM_setValue
-// @grant        GM_getValue
-// @grant    GM_registerMenuCommand
-// @grant    GM_unregisterMenuCommand
-/**
- * 油猴按钮
+ * 页：推送页，个人/机构主页，回答页，问题页，文章页，想法页，收藏夹页，搜索结果页，热榜，话题，圈子
+ * 兼容知乎新版 T-Shape 左侧栏 UI 与经典 UI、暗黑模式、Chevron 触发与极简模式
  */
 let registeredMenuIds = [];
+const getUIMode = () => {
+    try {
+        // @ts-ignore
+        const val = GM_getValue("ui_mode");
+        return val === "minimal" ? "minimal" : "full";
+    }
+    catch {
+        return "full";
+    }
+};
+const getSidebarTriggerMode = () => {
+    try {
+        // @ts-ignore
+        const val = GM_getValue("sidebar_trigger_mode");
+        return val === "hover_content" ? "hover_content" : "chevron";
+    }
+    catch {
+        return "chevron";
+    }
+};
 function registerBtn() {
     try {
-        // 知乎页面切换内容列表时会再次调用此函数，先清理旧菜单避免重复注册。
         const unregisterMenuCommand = globalThis.GM_unregisterMenuCommand;
         if (typeof unregisterMenuCommand === "function") {
             registeredMenuIds.forEach((id) => {
@@ -5774,70 +5824,70 @@ function registerBtn() {
             });
         }
         registeredMenuIds = [];
+        const uiMode = getUIMode();
         // @ts-ignore
-        let skipEmpty = GM_registerMenuCommand("（推荐）解析时跳过空白段落", function () {
+        registeredMenuIds.push(GM_registerMenuCommand(`🎨 UI界面模式：${uiMode === "minimal" ? "【老版极简居中】（点击切换新版）" : "【新版增强侧边栏】（点击切换老版）"}`, function () {
+            const nextMode = uiMode === "minimal" ? "full" : "minimal";
+            // @ts-ignore
+            GM_setValue("ui_mode", nextMode);
+            location.reload();
+        }));
+        const sidebarTriggerMode = getSidebarTriggerMode();
+        // @ts-ignore
+        registeredMenuIds.push(GM_registerMenuCommand(`🔘 侧边栏展开方式：${sidebarTriggerMode === "chevron" ? "【Chevron图标触发】（点击切换为【鼠标悬停正文】）" : "【鼠标悬停正文触发(原版)】（点击切换为【Chevron图标】）"}`, function () {
+            const nextMode = sidebarTriggerMode === "chevron" ? "hover_content" : "chevron";
+            // @ts-ignore
+            GM_setValue("sidebar_trigger_mode", nextMode);
+            location.reload();
+        }));
+        // @ts-ignore
+        registeredMenuIds.push(GM_registerMenuCommand("（推荐）解析时跳过空白段落", function () {
             // @ts-ignore
             let ac = GM_getValue("skip_empty_p"), c;
-            !ac ? c = confirm("解析时跳过空白段落，避免产生大量多余的换行，你是否继续？") : alert('已取消跳过空白段落');
-            if (c) {
-                // @ts-ignore
-                GM_setValue("skip_empty_p", true);
-                // @ts-ignore
-            }
-            else
-                GM_setValue("skip_empty_p", false);
-        });
-        registeredMenuIds.push(skipEmpty);
+            !ac ? c = confirm("解析时跳过空白段落，避免产生大量多余的换行，你是否继续？") : alert("已取消跳过空白段落");
+            // @ts-ignore
+            GM_setValue("skip_empty_p", Boolean(c));
+        }));
         // @ts-ignore
-        let menuFM = GM_registerMenuCommand("复制内容时添加fm元信息", function () {
+        registeredMenuIds.push(GM_registerMenuCommand("复制内容时添加fm元信息", function () {
             // @ts-ignore
             let ac = GM_getValue("copy_save_fm"), c;
-            !ac ? c = confirm("复制内容时，添加 frontmatter 信息，就像下载为纯文本的时候一样。你是否继续？") : alert('已取消复制添加fm');
+            !ac ? c = confirm("复制内容时，添加 frontmatter 信息，就像下载为纯文本的时候一样。你是否继续？") : alert("已取消复制添加fm");
             // @ts-ignore
-            c ? GM_setValue("copy_save_fm", true) : GM_setValue("copy_save_fm", false);
-            //alert(GM_getValue("copy_save_fm"))
-        });
-        registeredMenuIds.push(menuFM);
+            GM_setValue("copy_save_fm", Boolean(c));
+        }));
         // @ts-ignore
-        let menuSaveCM = GM_registerMenuCommand("复制内容时同时复制评论", function () {
+        registeredMenuIds.push(GM_registerMenuCommand("复制内容时同时复制评论", function () {
             // @ts-ignore
             let ns = GM_getValue("copy_save_cm"), c;
-            !ns ? c = confirm("启用后，复制时也会复制评论，就像直接复制了下载的纯文本。你是否继续？") : alert('已取消复制评论');
+            !ns ? c = confirm("启用后，复制时也会复制评论，就像直接复制了下载的纯文本。你是否继续？") : alert("已取消复制评论");
             // @ts-ignore
-            c ? GM_setValue("copy_save_cm", true) : GM_setValue("copy_save_cm", false);
-            //alert(GM_getValue("copy_save_cm"))
-        });
-        registeredMenuIds.push(menuSaveCM);
+            GM_setValue("copy_save_cm", Boolean(c));
+        }));
         // @ts-ignore
-        let menuMergeCM = GM_registerMenuCommand("下载zip时合并正文与评论", function () {
+        registeredMenuIds.push(GM_registerMenuCommand("下载zip时合并正文与评论", function () {
             // @ts-ignore
             let ns = GM_getValue("zip_merge_cm"), c;
-            !ns ? c = confirm("启用后，下载zip时会合并正文与评论到一个文件中。你是否继续？") : alert('已取消合并');
+            !ns ? c = confirm("启用后，下载zip时会合并正文与评论到一个文件中。你是否继续？") : alert("已取消合并");
             // @ts-ignore
-            c ? GM_setValue("zip_merge_cm", true) : GM_setValue("zip_merge_cm", false);
-            //alert(GM_getValue("zip_merge_cm"))
-        });
-        registeredMenuIds.push(menuMergeCM);
+            GM_setValue("zip_merge_cm", Boolean(c));
+        }));
         // @ts-ignore
-        let menuSaveImg = GM_registerMenuCommand("复制与下载纯文本时不保存图片", function () {
+        registeredMenuIds.push(GM_registerMenuCommand("复制与下载纯文本时不保存图片", function () {
             // @ts-ignore
             let ns = GM_getValue("no_save_img"), c;
-            !ns ? c = confirm("启用后，复制、存文本时将所有图片替换为“[图片]”，不影响存zip。你是否继续？") : alert('已取消不存图');
+            !ns ? c = confirm("启用后，复制、存文本时将所有图片替换为“[图片]”，不影响存zip。你是否继续？") : alert("已取消不存图");
             // @ts-ignore
-            c ? GM_setValue("no_save_img", true) : GM_setValue("no_save_img", false);
-            //alert(GM_getValue("no_save_img"))
-        });
-        registeredMenuIds.push(menuSaveImg);
+            GM_setValue("no_save_img", Boolean(c));
+        }));
         // @ts-ignore
-        let menuFilename = GM_registerMenuCommand("自定义保存后的文件名格式", function () {
+        registeredMenuIds.push(GM_registerMenuCommand("自定义保存后的文件名格式", function () {
             // @ts-ignore
             let efm = GM_getValue("edit_Filename");
             let fm = prompt(`是否自定义保存后的文件名格式？留空或填错恢复默认\n默认为title + "_" + author.name + "_" + time.modified.slice(0, 10) + remark，你可以调整它的顺序，使用其他属性需要阅读源码\n(new Date).toLocaleDateString().replaceAll('/','-')添加保存日期`, efm ? efm : 'title + "_" + author.name + "_" + time.modified.slice(0, 10) + remark');
             // @ts-ignore
             GM_setValue("edit_Filename", fm);
-            //alert(GM_getValue("edit_Filename"))
-        });
-        registeredMenuIds.push(menuFilename);
+        }));
     }
     catch (e) {
         console.warn(e);
@@ -5845,7 +5895,6 @@ function registerBtn() {
 }
 registerBtn();
 async function copyText(text) {
-    // 1. 优先使用油猴特权 API，不受手势过期或焦点丢失影响
     try {
         // @ts-ignore
         if (typeof GM_setClipboard === "function") {
@@ -5857,7 +5906,6 @@ async function copyText(text) {
     catch (e) {
         console.warn("GM_setClipboard 写入失败，尝试其他方案:", e);
     }
-    // 2. 尝试标准现代 Clipboard API
     if (navigator.clipboard?.writeText) {
         try {
             await navigator.clipboard.writeText(text);
@@ -5867,7 +5915,6 @@ async function copyText(text) {
             console.warn("浏览器剪贴板写入失败，尝试兼容方案:", error);
         }
     }
-    // 3. 降级方案：创建临时文本域
     const textarea = document.createElement("textarea");
     textarea.value = text;
     textarea.style.position = "fixed";
@@ -5886,159 +5933,195 @@ async function copyText(text) {
         textarea.remove();
     }
 }
-const ButtonContainer = document.createElement("div");
-ButtonContainer.classList.add("zhihubackup-wrap");
-ButtonContainer.innerHTML = `<div class="zhihubackup-container">
+const OBSIDIAN_ICON = `<svg style="width: 1.5em;height: 1.5em;opacity: 0.7;vertical-align: sub;" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M19.355 18.538a68.967 68.959 0 0 0 1.858-2.954a.81.81 0 0 0-.062-.9c-.516-.685-1.504-2.075-2.042-3.362c-.553-1.321-.636-3.375-.64-4.377a1.7 1.7 0 0 0-.358-1.05l-3.198-4.064a4 4 0 0 1-.076.543c-.106.503-.307 1.004-.536 1.5c-.134.29-.29.6-.446.914l-.31.626c-.516 1.068-.997 2.227-1.132 3.59c-.124 1.26.046 2.73.815 4.481q.192.016.386.044a6.36 6.36 0 0 1 3.326 1.505c.916.79 1.744 1.922 2.415 3.5zM8.199 22.569q.11.019.22.02c.78.024 2.095.092 3.16.29c.87.16 2.593.64 4.01 1.055c1.083.316 2.198-.548 2.355-1.664c.114-.814.33-1.735.725-2.58l-.01.005c-.67-1.87-1.522-3.078-2.416-3.849a5.3 5.3 0 0 0-2.778-1.257c-1.54-.216-2.952.19-3.84.45c.532 2.218.368 4.829-1.425 7.531zM5.533 9.938q-.035.15-.098.29L2.82 16.059a1.6 1.6 0 0 0 .313 1.772l4.116 4.24c2.103-3.101 1.796-6.02.836-8.3c-.728-1.73-1.832-3.081-2.55-3.831zM9.32 14.01c.615-.183 1.606-.465 2.745-.534c-.683-1.725-.848-3.233-.716-4.577c.154-1.552.7-2.847 1.235-3.95q.17-.35.328-.664c.149-.297.288-.577.419-.86c.217-.47.379-.885.46-1.27c.08-.38.08-.72-.014-1.043c-.095-.325-.297-.675-.68-1.06a1.6 1.6 0 0 0-1.475.36l-4.95 4.452a1.6 1.6 0 0 0-.513.952l-.427 2.83c.672.59 2.328 2.316 3.335 4.711q.136.317.253.653"></path></svg>`;
+const SIDEBAR_BTNS_HTML = `<div class="zhihubackup-container">
     <button class="to-copy Button VoteButton">复制为Markdown</button>
     <button class="to-zip Button VoteButton">下载为 ZIP</button>
     <button class="to-text Button VoteButton">下载为纯文本</button>
     <button class="to-png Button VoteButton">剪藏为 PNG</button>
-    <button class="to-obsidian Button VoteButton">
-    <svg style="width: 2em;height: 2em;width: 1.5em;height: 1.5em;opacity: 0.6;vertical-align: sub;" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M19.355 18.538a68.967 68.959 0 0 0 1.858-2.954a.81.81 0 0 0-.062-.9c-.516-.685-1.504-2.075-2.042-3.362c-.553-1.321-.636-3.375-.64-4.377a1.7 1.7 0 0 0-.358-1.05l-3.198-4.064a4 4 0 0 1-.076.543c-.106.503-.307 1.004-.536 1.5c-.134.29-.29.6-.446.914l-.31.626c-.516 1.068-.997 2.227-1.132 3.59c-.124 1.26.046 2.73.815 4.481q.192.016.386.044a6.36 6.36 0 0 1 3.326 1.505c.916.79 1.744 1.922 2.415 3.5zM8.199 22.569q.11.019.22.02c.78.024 2.095.092 3.16.29c.87.16 2.593.64 4.01 1.055c1.083.316 2.198-.548 2.355-1.664c.114-.814.33-1.735.725-2.58l-.01.005c-.67-1.87-1.522-3.078-2.416-3.849a5.3 5.3 0 0 0-2.778-1.257c-1.54-.216-2.952.19-3.84.45c.532 2.218.368 4.829-1.425 7.531zM5.533 9.938q-.035.15-.098.29L2.82 16.059a1.6 1.6 0 0 0 .313 1.772l4.116 4.24c2.103-3.101 1.796-6.02.836-8.3c-.728-1.73-1.832-3.081-2.55-3.831zM9.32 14.01c.615-.183 1.606-.465 2.745-.534c-.683-1.725-.848-3.233-.716-4.577c.154-1.552.7-2.847 1.235-3.95q.17-.35.328-.664c.149-.297.288-.577.419-.86c.217-.47.379-.885.46-1.27c.08-.38.08-.72-.014-1.043c-.095-.325-.297-.675-.68-1.06a1.6 1.6 0 0 0-1.475.36l-4.95 4.452a1.6 1.6 0 0 0-.513.952l-.427 2.83c.672.59 2.328 2.316 3.335 4.711q.136.317.253.653"></path></svg>
-    保存到<br>指定文件夹</button>
+    <button class="to-obsidian Button VoteButton">${OBSIDIAN_ICON} 保存到<br>指定文件夹</button>
     <div class="Button VoteButton" style="display: inline-block;box-sizing: border-box;overflow: hidden;">
-        <textarea class="to-remark" type="text" placeholder="添加备注" style="width: 100%;" maxlength="60"></textarea>
+        <textarea class="to-remark" placeholder="添加备注" style="width: 100%;" maxlength="60"></textarea>
     </div>
     <div class="Button VoteButton" style="display: inline-block;box-sizing: border-box;">
         <label><input type="checkbox" checked class="to-cm"> 保存评论</label>
-    </div>`;
+    </div>
+</div>`;
+const renderContainerHTML = () => {
+    if (getUIMode() === "minimal") {
+        return `<div class="zhcollect-minimal-btns">
+    <button class="to-copy-context zhcollect-btn" style="border-radius:1em 0 0 1em;padding-left:.5em;">复制标题+正文</button>
+    <button class="to-copy-content zhcollect-btn" style="border-radius:0 1em 1em 0;padding-right:.5em;">复制正文</button>
+</div>`;
+    }
+    if (getSidebarTriggerMode() === "chevron") {
+        return `<div class="zhihubackup-sticky-box">
+    ${SIDEBAR_BTNS_HTML}
+    <div class="zhihubackup-trigger" title="展开剪藏工具栏"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></div>
+</div>`;
+    }
+    return SIDEBAR_BTNS_HTML;
+};
+const ButtonContainer = document.createElement("div");
+if (getUIMode() === "full") {
+    ButtonContainer.classList.add("zhihubackup-wrap");
+    if (getSidebarTriggerMode() === "chevron") {
+        ButtonContainer.classList.add("zhihubackup-chevron-mode");
+    }
+}
+ButtonContainer.innerHTML = renderContainerHTML();
+const getScreenshotBg = () => document.documentElement.getAttribute("data-theme") === "dark" ? "#22272E" : "#ffffff";
 const main = async () => {
-    //console.log("Starting…")
+    const uiMode = getUIMode();
     const RichTexts = Array.from(document.querySelectorAll(".RichText"));
     for (let RichText of RichTexts) {
         try {
             let result;
-            //console.log(RichText)
             if (!RichText.parentElement || RichText.parentElement.classList.contains("Editable"))
                 continue;
-            if (window.location.hostname.includes('zhuanlan')) {
-                const postMain = RichText.closest('.Post-Main');
-                if (!postMain || postMain.querySelector(".zhihubackup-container"))
+            if (RichText.closest(".QuestionRichText"))
+                continue; // 排除问题描述区的 RichText，仅挂载回答/文章/想法
+            if (window.location.hostname.includes("zhuanlan")) {
+                const postMain = RichText.closest(".Post-Main");
+                if (!postMain || postMain.querySelector(".zhcollect-minimal-btns, .zhihubackup-container"))
                     continue;
             }
             else {
-                if (RichText.closest('.PinItem')) {
-                    if (!RichText.closest('.RichContent-inner'))
-                        continue; //每个带图想法有3个RichText，除掉图、假转发
-                    //if (RichText.children[0].classList.contains("Image-Wrapper-Preview")) continue
-                    if (RichText.closest('.PinItem-content-originpin'))
-                        continue; //被转发想法
+                if (RichText.closest(".PinItem")) {
+                    if (!RichText.closest(".RichContent-inner"))
+                        continue;
+                    if (RichText.closest(".PinItem-content-originpin"))
+                        continue;
                 }
-                const richContent = RichText.closest('.RichContent');
-                if (!richContent || richContent.querySelector(".zhihubackup-container"))
+                const richContent = RichText.closest(".RichContent");
+                if (!richContent || richContent.querySelector(".zhcollect-minimal-btns, .zhihubackup-container"))
                     continue;
-                const richInner = RichText.closest('.RichContent-inner');
+                const richInner = RichText.closest(".RichContent-inner");
                 if (richInner && richInner.querySelector(".ContentItem-more"))
-                    continue; //未展开
+                    continue;
                 if (richContent.querySelector(".ContentItem-expandButton"))
                     continue;
-                //if (RichText.textContent.length == 0) continue
             }
             const aButtonContainer = ButtonContainer.cloneNode(true);
-            //父级
-            let parent_dom = RichText.closest('.List-item') ||
-                RichText.closest('.Post-content') ||
-                RichText.closest('.PinItem') ||
-                RichText.closest('.CollectionDetailPageItem') ||
-                RichText.closest('.Card');
+            const parent_dom = (RichText.closest(".List-item") ||
+                RichText.closest(".Post-content") ||
+                RichText.closest(".PinItem") ||
+                RichText.closest(".CollectionDetailPageItem") ||
+                RichText.closest(".Card"));
             if (!parent_dom)
                 continue;
-            if (parent_dom.querySelector('.Catalog') || document.querySelector('.Catalog')) {
-                aButtonContainer.classList.add('has-catalog-right');
+            if (uiMode === "full") {
+                if (parent_dom.querySelector(".Catalog") || (window.location.hostname.includes("zhuanlan") && document.querySelector(".Catalog"))) {
+                    aButtonContainer.classList.add("has-catalog-right");
+                }
+                const p = (RichText.closest(".RichContent") || RichText.closest(".Post-RichTextContainer"));
+                if (!p)
+                    continue;
+                p.prepend(aButtonContainer);
+                const closeAllSidebars = (except) => {
+                    document.querySelectorAll(".zhihubackup-wrap.is-open").forEach((el) => {
+                        if (el !== except)
+                            el.classList.remove("is-open");
+                    });
+                };
+                const trigger = aButtonContainer.querySelector(".zhihubackup-trigger");
+                if (trigger) {
+                    trigger.addEventListener("mouseenter", () => {
+                        closeAllSidebars(aButtonContainer);
+                        aButtonContainer.classList.add("is-open");
+                    });
+                    trigger.addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        const wasOpen = aButtonContainer.classList.contains("is-open");
+                        closeAllSidebars();
+                        if (!wasOpen)
+                            aButtonContainer.classList.add("is-open");
+                    });
+                    aButtonContainer.addEventListener("mouseleave", () => {
+                        aButtonContainer.classList.remove("is-open");
+                    });
+                }
             }
-            let p = RichText.closest('.RichContent') || RichText.closest('.Post-RichTextContainer');
-            if (!p)
-                continue;
-            p.prepend(aButtonContainer);
-            // 为 textarea 添加事件监听器，阻止事件冒泡，确保可以正常输入
+            else {
+                RichText.prepend(aButtonContainer);
+            }
             const textareaRemark = aButtonContainer.querySelector(".to-remark");
             textareaRemark?.addEventListener("click", (e) => {
                 e.stopPropagation();
                 e.preventDefault();
                 textareaRemark.focus();
-            }, true); // 使用捕获阶段
-            const ButtonMarkdown = aButtonContainer.querySelector(".to-copy");
-            if (!ButtonMarkdown) {
-                aButtonContainer.remove();
-                continue;
-            }
-            ButtonMarkdown.addEventListener("click", throttle(async (event) => {
-                try {
-                    const res = await (0,dealItem/* default */.A)(RichText, 'copy', event);
-                    if (!res)
-                        return; // 取消保存
-                    result = {
-                        textString: res.textString,
-                        title: res.title,
-                    };
-                    /*console.log(result.markdown.join("\n\n"))*/
-                    await copyText(result.textString || "");
-                    ButtonMarkdown.innerHTML = "复制成功✅";
-                    setTimeout(() => {
-                        ButtonMarkdown.innerHTML = "复制为Markdown";
-                    }, 3000);
-                }
-                catch (e) {
-                    console.log(e);
-                    ButtonMarkdown.innerHTML = "发生错误❌<br>请打开控制台查看";
-                    setTimeout(() => {
-                        ButtonMarkdown.innerHTML = "复制为Markdown";
-                    }, 3000);
-                }
-            }));
+            }, true);
+            const bindCopyAction = (selector, mode, defaultLabel) => {
+                const btn = aButtonContainer.querySelector(selector);
+                if (!btn)
+                    return;
+                btn.addEventListener("click", throttle(async (event) => {
+                    try {
+                        const res = await (0,dealItem/* default */.A)(RichText, mode, event);
+                        if (!res)
+                            return;
+                        await copyText(res.textString || "");
+                        btn.innerHTML = "复制成功✅";
+                        setTimeout(() => { btn.innerHTML = defaultLabel; }, 2500);
+                    }
+                    catch (e) {
+                        console.log(e);
+                        btn.innerHTML = "发生错误❌";
+                        setTimeout(() => { btn.innerHTML = defaultLabel; }, 3000);
+                    }
+                }));
+            };
+            bindCopyAction(".to-copy", "copy", "复制为Markdown");
+            bindCopyAction(".to-copy-context", "copy_context", "复制标题+正文");
+            bindCopyAction(".to-copy-content", "copy_content", "复制正文");
             const ButtonZip = aButtonContainer.querySelector(".to-zip");
-            ButtonZip.addEventListener("click", throttle(async (event) => {
+            ButtonZip?.addEventListener("click", throttle(async (event) => {
                 try {
                     ButtonZip.innerHTML = "下载中……";
-                    const res = await (0,dealItem/* default */.A)(RichText, 'zip', event);
-                    if (!res)
-                        return ButtonZip.innerHTML = "下载为 ZIP"; // 取消保存
-                    result = {
-                        zip: res.zip,
-                        title: res.title,
-                    };
+                    const res = await (0,dealItem/* default */.A)(RichText, "zip", event);
+                    if (!res || !res.zip) {
+                        ButtonZip.innerHTML = "下载为 ZIP";
+                        return;
+                    }
+                    result = { zip: res.zip, title: res.title || "untitled" };
                     const blob = await result.zip.generateAsync({ type: "blob" });
                     (0,FileSaver_min.saveAs)(blob, result.title + ".zip");
                     ButtonZip.innerHTML = "下载成功✅<br>请看下载记录";
-                    setTimeout(() => {
-                        ButtonZip.innerHTML = "下载为 ZIP";
-                    }, 5000);
+                    setTimeout(() => { ButtonZip.innerHTML = "下载为 ZIP"; }, 5000);
                 }
                 catch (e) {
                     console.log(e);
                     ButtonZip.innerHTML = "发生错误❌<br>请打开控制台查看";
-                    setTimeout(() => {
-                        ButtonZip.innerHTML = "下载为 ZIP";
-                    }, 5000);
+                    setTimeout(() => { ButtonZip.innerHTML = "下载为 ZIP"; }, 5000);
                 }
             }));
             const ButtonPNG = aButtonContainer.querySelector(".to-png");
-            ButtonPNG.addEventListener("click", throttle(async (event) => {
+            ButtonPNG?.addEventListener("click", throttle(async (event) => {
                 try {
-                    const res = await (0,dealItem/* default */.A)(RichText, 'png', event);
+                    const res = await (0,dealItem/* default */.A)(RichText, "png", event);
                     if (!res)
-                        return; // 取消保存
-                    result = {
-                        title: res.title,
-                    };
-                    let clip = parent_dom;
+                        return;
+                    result = { title: res.title || "untitled" };
+                    const clip = parent_dom;
                     clip.classList.add("to-screenshot");
-                    let saveCM = (0,utils/* getCommentSwitch */.mK)(RichText);
-                    !saveCM ? clip.classList.add("no-cm") : 0;
-                    let svgDefs = document.querySelector("#MathJax_SVG_glyphs");
-                    let svgVisibility = svgDefs?.style.visibility;
-                    svgDefs ? svgDefs.style.visibility = "visible" : 0;
+                    const saveCM = (0,utils/* getCommentSwitch */.mK)(RichText);
+                    if (!saveCM)
+                        clip.classList.add("no-cm");
+                    const svgDefs = document.querySelector("#MathJax_SVG_glyphs");
+                    const svgVisibility = svgDefs?.style.visibility || "";
+                    if (svgDefs)
+                        svgDefs.style.visibility = "visible";
                     try {
                         const dataUrl = await domToPng(clip, {
-                            backgroundColor: "#fff",
+                            backgroundColor: getScreenshotBg(),
                             filter(el) {
-                                if (el.tagName == 'DIV' && el.classList.contains('zhihubackup-wrap'))
+                                if (el.tagName === "DIV" && (el.classList.contains("zhihubackup-wrap") ||
+                                    el.classList.contains("zhcollect-minimal-btns")))
                                     return false;
-                                else
-                                    return true;
+                                return true;
                             },
                         });
-                        const link = document.createElement('a');
+                        const link = document.createElement("a");
                         link.download = result.title + ".png";
                         link.href = dataUrl;
                         link.click();
@@ -6047,7 +6130,8 @@ const main = async () => {
                     }
                     finally {
                         clip.classList.remove("to-screenshot");
-                        !saveCM ? clip.classList.remove("no-cm") : 0;
+                        if (!saveCM)
+                            clip.classList.remove("no-cm");
                         if (svgDefs)
                             svgDefs.style.visibility = svgVisibility;
                     }
@@ -6055,92 +6139,77 @@ const main = async () => {
                 catch (e) {
                     console.log(e);
                     ButtonPNG.innerHTML = "发生错误❌<br>请打开控制台查看";
-                    setTimeout(() => {
-                        ButtonPNG.innerHTML = "剪藏为 PNG";
-                    }, 5000);
+                    setTimeout(() => { ButtonPNG.innerHTML = "剪藏为 PNG"; }, 5000);
                 }
             }));
             const ButtonText = aButtonContainer.querySelector(".to-text");
-            ButtonText.addEventListener("click", throttle(async (event) => {
+            ButtonText?.addEventListener("click", throttle(async (event) => {
                 try {
-                    const res = await (0,dealItem/* default */.A)(RichText, 'text', event);
+                    const res = await (0,dealItem/* default */.A)(RichText, "text", event);
                     if (!res)
-                        return; // 取消保存
-                    result = {
-                        textString: res.textString,
-                        title: res.title,
-                    };
-                    const blob = new Blob([result.textString], { type: 'text/plain' });
+                        return;
+                    result = { textString: res.textString, title: res.title || "untitled" };
+                    const blob = new Blob([result.textString || ""], { type: "text/plain" });
                     (0,FileSaver_min.saveAs)(blob, result.title + ".md");
                     ButtonText.innerHTML = "下载成功✅<br>请看下载记录，以文本方式打开";
-                    setTimeout(() => {
-                        ButtonText.innerHTML = "下载为纯文本";
-                    }, 5000);
+                    setTimeout(() => { ButtonText.innerHTML = "下载为纯文本"; }, 5000);
                 }
                 catch (e) {
                     console.log(e);
                     ButtonText.innerHTML = "发生错误❌<br>请打开控制台查看";
-                    setTimeout(() => {
-                        ButtonText.innerHTML = "下载为纯文本";
-                    }, 5000);
+                    setTimeout(() => { ButtonText.innerHTML = "下载为纯文本"; }, 5000);
                 }
             }));
             const ButtonObsidian = aButtonContainer.querySelector(".to-obsidian");
-            ButtonObsidian.addEventListener("click", throttle(async (event) => {
+            ButtonObsidian?.addEventListener("click", throttle(async () => {
                 try {
-                    let saveType = await (0,obsidianSaver/* selectObsidianVault */.yY)();
+                    const saveType = await (0,obsidianSaver/* selectObsidianVault */.yY)();
                     if (!saveType)
-                        return; // 取消保存
-                    if (saveType == 'text') {
-                        const res = await (0,dealItem/* default */.A)(RichText, 'text');
+                        return;
+                    if (saveType == "text") {
+                        const res = await (0,dealItem/* default */.A)(RichText, "text");
                         if (!res)
-                            return; // 取消保存
-                        result = {
-                            textString: res.textString,
-                            title: res.title,
-                        };
+                            return;
+                        result = { textString: res.textString, title: res.title || "untitled" };
                         await (0,obsidianSaver/* saveFile */.OJ)(result, saveType);
                     }
-                    else if (saveType.slice(0, 3) == 'zip') {
-                        const res = await (0,dealItem/* default */.A)(RichText, 'zip');
+                    else if (saveType.slice(0, 3) == "zip") {
+                        const res = await (0,dealItem/* default */.A)(RichText, "zip");
                         if (!res)
-                            return; // 取消保存
-                        result = {
-                            zip: res.zip,
-                            title: res.title,
-                        };
+                            return;
+                        result = { zip: res.zip, title: res.title || "untitled" };
                         await (0,obsidianSaver/* saveFile */.OJ)(result, saveType);
                     }
-                    else if (saveType == 'png') {
-                        const res = await (0,dealItem/* default */.A)(RichText, 'png');
+                    else if (saveType == "png") {
+                        const res = await (0,dealItem/* default */.A)(RichText, "png");
                         if (!res)
-                            return; // 取消保存
-                        let clip = parent_dom;
+                            return;
+                        const clip = parent_dom;
                         clip.classList.add("to-screenshot");
-                        let saveCM = (0,utils/* getCommentSwitch */.mK)(RichText);
-                        !saveCM ? clip.classList.add("no-cm") : 0;
-                        let svgDefs = document.querySelector("#MathJax_SVG_glyphs");
-                        let svgVisibility = svgDefs?.style.visibility;
-                        svgDefs ? svgDefs.style.visibility = "visible" : 0;
+                        const saveCM = (0,utils/* getCommentSwitch */.mK)(RichText);
+                        if (!saveCM)
+                            clip.classList.add("no-cm");
+                        const svgDefs = document.querySelector("#MathJax_SVG_glyphs");
+                        const svgVisibility = svgDefs?.style.visibility || "";
+                        if (svgDefs)
+                            svgDefs.style.visibility = "visible";
                         try {
                             const dataUrl = await domToPng(clip, {
-                                backgroundColor: "#fff",
+                                backgroundColor: getScreenshotBg(),
                                 filter(el) {
-                                    if (el.tagName == 'DIV' && el.classList.contains('zhihubackup-wrap'))
+                                    if (el.tagName === "DIV" && (el.classList.contains("zhihubackup-wrap") ||
+                                        el.classList.contains("zhcollect-minimal-btns")))
                                         return false;
-                                    else
-                                        return true;
+                                    return true;
                                 },
                             });
-                            result = {
-                                textString: dataUrl,
-                                title: res.title,
-                            };
+                            result = { textString: dataUrl, title: res.title || "untitled" };
                             await (0,obsidianSaver/* saveFile */.OJ)(result, saveType);
                         }
                         finally {
                             clip.classList.remove("to-screenshot");
-                            !saveCM ? clip.classList.remove("no-cm") : 0;
+                            if (!saveCM)
+                                clip.classList.remove("no-cm");
                             if (svgDefs)
                                 svgDefs.style.visibility = svgVisibility;
                         }
@@ -6148,7 +6217,7 @@ const main = async () => {
                 }
                 catch (e) {
                     console.log(e);
-                    alert('发生错误❌请打开控制台查看\n你可以关闭窗口后再试一次！');
+                    alert("发生错误❌请打开控制台查看\n你可以关闭窗口后再试一次！");
                 }
             }));
         }
@@ -6165,28 +6234,56 @@ function throttle(fn, delay = 2000) {
             setTimeout(() => {
                 flag = true;
             }, delay);
-            return fn.apply(this, args); // 通过 apply 传递参数和 this
+            return fn.apply(this, args);
         }
     };
 }
 setTimeout(() => {
-    let node = document.createElement("style"); //!important
+    const node = document.createElement("style");
     node.appendChild(document.createTextNode(`
+    /* ========== Minimal Mode ========== */
+    .zhcollect-minimal-btns {
+        user-select: none;
+        margin-bottom: 8px;
+    }
+    .zhcollect-btn {
+        width: 120px;
+        height: 2.1em;
+        background-color: rgba(85, 85, 85, 0.9);
+        color: #fff;
+        outline: none;
+        cursor: pointer;
+        border: none;
+        border-radius: 1em;
+        margin: 0 .15em .6em .15em;
+        font-size: .82em;
+        z-index: 20;
+    }
+    .zhcollect-btn:hover {
+        background-color: rgba(23, 114, 246, 0.95);
+    }
+
+    /* ========== Full Sidebar Mode ========== */
     .RichContent,
     .Post-RichTextContainer {
         position: relative;
     }
+    .Card:has(.zhihubackup-wrap),
+    .List-item:has(.zhihubackup-wrap),
+    .Question-mainColumn:has(.zhihubackup-wrap),
+    .Topstory-mainColumn:has(.zhihubackup-wrap) {
+        overflow: visible !important;
+    }
     .zhihubackup-wrap {
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.5s;
         position: absolute;
-        left: -10em;
-        top: -100px;
-        height: 100%;
+        left: -9.8em;
+        top: -80px;
+        height: calc(100% + 80px);
         min-height: 200px;
         user-select: none;
-        width: 12em;
+        width: 9.8em;
+        z-index: 20;
+        pointer-events: none;
     }
     .Post-content:has(.Catalog) .zhihubackup-wrap,
     .Post-Main:has(.Catalog) .zhihubackup-wrap,
@@ -6194,42 +6291,154 @@ setTimeout(() => {
         left: calc(100% + 16px) !important;
         right: unset !important;
     }
-    .RichContent:hover .zhihubackup-wrap,
-    .ContentItem:hover .zhihubackup-wrap,
-    .Post-content:hover .zhihubackup-wrap,
-    .Post-RichTextContainer:hover .zhihubackup-wrap,
-    .zhihubackup-wrap:hover {
-        opacity: 1;
-        pointer-events: initial;
+
+    /* Hover Mode */
+    .zhihubackup-wrap:not(.zhihubackup-chevron-mode) {
+        opacity: 0;
+        transition: opacity 0.25s ease;
     }
-    .zhihubackup-container {
+    .RichContent:hover .zhihubackup-wrap:not(.zhihubackup-chevron-mode),
+    .ContentItem:hover .zhihubackup-wrap:not(.zhihubackup-chevron-mode),
+    .Post-content:hover .zhihubackup-wrap:not(.zhihubackup-chevron-mode),
+    .Post-RichTextContainer:hover .zhihubackup-wrap:not(.zhihubackup-chevron-mode),
+    .zhihubackup-wrap:not(.zhihubackup-chevron-mode):hover {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .zhihubackup-wrap:not(.zhihubackup-chevron-mode) .zhihubackup-container {
         position: sticky;
-        top: 120px;
+        top: 110px;
         display: flex;
         flex-direction: column;
         width: min-content;
-        max-width: 8em;
-        z-index: 2;
+        max-width: 8.2em;
+        z-index: 20;
+        pointer-events: auto;
     }
-    .Post-content:has(.Catalog) .zhihubackup-container,
-    .Post-Main:has(.Catalog) .zhihubackup-container,
-    .zhihubackup-wrap.has-catalog-right .zhihubackup-container {
-        position: sticky !important;
-        top: 120px !important;
-        bottom: unset !important;
+
+    /* Chevron Mode */
+    .zhihubackup-chevron-mode .zhihubackup-sticky-box {
+        position: sticky;
+        top: 170px;
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: flex-end;
+        gap: 8px;
+        width: 100%;
+        pointer-events: none;
     }
+    .Post-content:has(.Catalog) .zhihubackup-chevron-mode .zhihubackup-sticky-box,
+    .Post-Main:has(.Catalog) .zhihubackup-chevron-mode .zhihubackup-sticky-box,
+    .zhihubackup-wrap.has-catalog-right.zhihubackup-chevron-mode .zhihubackup-sticky-box {
+        flex-direction: row-reverse;
+    }
+    .zhihubackup-chevron-mode .zhihubackup-trigger {
+        position: relative;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(60, 60, 60, 0.75);
+        background: rgba(255, 255, 255, 0.88);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+        transition: opacity 0.22s ease, background 0.22s ease, transform 0.22s ease, color 0.22s ease, border-color 0.22s ease;
+        opacity: 0.42;
+        z-index: 21;
+        pointer-events: auto;
+        box-sizing: border-box;
+        width: 24px;
+        height: 38px;
+        border-radius: 12px;
+        flex-shrink: 0;
+        margin-right: 10px;
+    }
+    html[data-theme="dark"] .zhihubackup-chevron-mode .zhihubackup-trigger {
+        color: #adbac7;
+        background: rgba(45, 51, 59, 0.9);
+        border-color: rgba(255, 255, 255, 0.14);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.32);
+    }
+    .zhihubackup-chevron-mode .zhihubackup-trigger::before {
+        content: '';
+        position: absolute;
+        inset: -12px;
+        border-radius: inherit;
+    }
+    .zhihubackup-chevron-mode .zhihubackup-trigger svg {
+        transition: transform 0.25s ease;
+    }
+    .zhihubackup-wrap.is-open .zhihubackup-trigger,
+    .zhihubackup-chevron-mode .zhihubackup-trigger:hover {
+        opacity: 1 !important;
+        background: rgba(255, 255, 255, 0.98);
+        border-color: rgba(23, 114, 246, 0.35);
+        transform: scale(1.12);
+        color: #1772f6;
+    }
+    html[data-theme="dark"] .zhihubackup-wrap.is-open .zhihubackup-trigger,
+    html[data-theme="dark"] .zhihubackup-chevron-mode .zhihubackup-trigger:hover {
+        background: #373E47;
+        border-color: rgba(88, 166, 255, 0.5);
+        color: #58a6ff;
+    }
+    .zhihubackup-chevron-mode .zhihubackup-container {
+        display: flex;
+        flex-direction: column;
+        width: min-content;
+        max-width: 8.2em;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.22s ease;
+        padding: 6px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.96);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+    }
+    html[data-theme="dark"] .zhihubackup-chevron-mode .zhihubackup-container,
+    html[data-theme="dark"] .zhihubackup-wrap:not(.zhihubackup-chevron-mode) .zhihubackup-container {
+        background: rgba(34, 39, 46, 0.96);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+        padding: 6px;
+        border-radius: 10px;
+        border: 1px solid #373E47;
+    }
+    .zhihubackup-wrap.is-open {
+        pointer-events: auto;
+    }
+    .zhihubackup-wrap.is-open .zhihubackup-container {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .zhihubackup-wrap.is-open .zhihubackup-trigger svg {
+        transform: rotate(180deg);
+    }
+
     .zhihubackup-container .Button {
         width: 8em;
-        margin-bottom: 8px;
-        line-height: 24px !important;
-        padding: 4px 10px!important;
+        margin-bottom: 6px;
+        line-height: 22px !important;
+        padding: 4px 8px !important;
+    }
+    .zhihubackup-container .Button:last-child {
+        margin-bottom: 0;
+    }
+    html[data-theme="dark"] .zhihubackup-container .Button.VoteButton {
+        background-color: #2D333B !important;
+        color: #58a6ff !important;
+        border: 1px solid #444c56 !important;
+    }
+    html[data-theme="dark"] .zhihubackup-container .Button.VoteButton:hover {
+        background-color: #373E47 !important;
     }
     .zhihubackup-container input,
     .zhihubackup-container textarea {
-        /*border: 1px solid #777;*/
-        background-color: #0000;
-        font-size: 14px;
-        color: #1772f6;
+        background-color: transparent;
+        font-size: 13px;
+        color: inherit;
         border: unset;
         text-align: center;
         outline: unset;
@@ -6245,13 +6454,30 @@ setTimeout(() => {
         resize: both;
         overflow: hidden;
     }
+
+    /* 窄屏自适应：收进卡片右上角内侧避免被左边界裁切 */
+    @media (max-width: 1180px) {
+        .zhihubackup-wrap {
+            left: unset !important;
+            right: 0 !important;
+        }
+        .zhihubackup-chevron-mode .zhihubackup-sticky-box {
+            flex-direction: row-reverse;
+        }
+        .zhihubackup-chevron-mode .zhihubackup-trigger {
+            margin-right: 0;
+            margin-left: 6px;
+        }
+    }
+
+    /* 截图净化 */
     .to-screenshot .ContentItem-actions {
         position: initial!important;
         box-shadow: unset!important;
         margin: 0 -20px -10px!important;
     }
     .to-screenshot.Post-content .RichContent-actions {
-        position: initial!important;/*专栏*/
+        position: initial!important;
         box-shadow: unset!important;
     }
     .to-screenshot.Post-content {
@@ -6265,118 +6491,82 @@ setTimeout(() => {
         align-items: center;
     }
     .to-screenshot.PinItem .RichText>.RichText:has(a[data-first-child]) {
-        display: flex;/*想法-卡片链接*/
+        display: flex;
         flex-direction: column;
         align-items: center;
     }
     .to-screenshot .ContentItem-actions>.ContentItem-actions {
-        margin-top: -10px!important;/*想法*/
+        margin-top: -10px!important;
     }
-    .to-screenshot .css-m4psdq{
+    .to-screenshot .css-m4psdq,
+    .to-screenshot .AppHeader-profileAvatar {
         opacity: 0;
     }
-    .to-screenshot .AppHeader-profileAvatar{
-        opacity: 0;
-    }
-    .to-screenshot.no-cm .Comments-container{
+    .to-screenshot.no-cm .Comments-container,
+    .to-screenshot noscript,
+    .to-screenshot .Recommendations-Main,
+    .to-screenshot .css-kt4t4n {
         display: none;
     }
-    .to-screenshot noscript{
-        display: none;
-    }
-    .to-screenshot .RichText-LinkCardContainer{
+    .to-screenshot .RichText-LinkCardContainer {
         display: flex;
         justify-content: center;
     }
-    .to-screenshot .LinkCard.new{
-        margin: 0!important;
-    }
-    .to-screenshot .FeedSource{
-        margin-bottom: 14px !important;
-    }
-    .to-screenshot .Comments-container>div>div{
-        margin-bottom: 10px !important;
-    }
-    .to-screenshot .Comments-container{
+    .to-screenshot .LinkCard.new,
+    .to-screenshot .Comments-container {
         margin: 0 !important;
     }
-    .to-screenshot.PinItem{
-        margin: 16px 0;/*想法增加留白*/
+    .to-screenshot .FeedSource {
+        margin-bottom: 14px !important;
+    }
+    .to-screenshot .Comments-container>div>div {
+        margin-bottom: 10px !important;
+    }
+    .to-screenshot.PinItem {
+        margin: 16px 0;
         padding: 0 16px;
         width: 690px;
     }
-    .PinDetail:has(.to-screenshot){
+    .PinDetail:has(.to-screenshot) {
         max-width: 706px!important;
     }
-    .to-screenshot .Recommendations-Main{
-        display: none;/*文章推荐阅读*/
-    }
-    .to-screenshot .css-kt4t4n{
-        display: none;/*下方黏性评论栏*/
-    }
-    .to-screenshot .zhihubackup-container{
-        /*display: none;*/
-    }
     .RichContent:has(.ContentItem-more) .zhihubackup-wrap,
-    .Post-RichTextContainer:has(.ContentItem-more) .zhihubackup-wrap{
-        display:none;
+    .Post-RichTextContainer:has(.ContentItem-more) .zhihubackup-wrap,
+    .RichContent:has(.ContentItem-more) .zhcollect-minimal-btns,
+    .Post-RichTextContainer:has(.ContentItem-more) .zhcollect-minimal-btns {
+        display: none;
     }
-    .comment-parser-container{
+    .comment-parser-container {
         opacity: 0;
         pointer-events: none;
-        transition: opacity 0.5s;
+        transition: opacity 0.3s;
     }
     .Comments-container:hover .comment-parser-container,
-    .Modal-content:hover .comment-parser-container{
+    .Modal-content:hover .comment-parser-container {
         opacity: 1;
         pointer-events: initial;
     }
-    .Card:has(.zhihubackup-wrap){
-        overflow: visible!important;
-    }
     `));
-    let head = document.querySelector("head");
-    head.appendChild(node);
-    if (window.innerWidth < 1275) {
-        let node2 = document.createElement("style");
-        node2.appendChild(document.createTextNode(`
-        .zhihubackup-wrap {
-            left: unset;
-            right: -10em;
-            z-index: 2;
-        }
-        .zhihubackup-container {
-            float: right;
-            background-color: rgb(244, 246, 249);
-        }
-        .RichContent {
-            z-index: 2;
-        }
-        `));
-        head.appendChild(node2);
-    }
+    document.querySelector("head")?.appendChild(node);
 }, 30);
 setTimeout(() => {
     main();
+    mountCopyAll(copyText);
     mountParseComments();
     // @ts-ignore
     window.zhbf = main;
-    // 在window对象上创建存储空间
     // @ts-ignore
     window.ArticleComments = window.ArticleComments || {};
-    document.querySelector('.Topstory-tabs')?.addEventListener('click', () => {
+    document.querySelector(".Topstory-tabs")?.addEventListener("click", () => {
         setTimeout(registerBtn, 100);
     });
 }, 300);
 let timer = null;
 window.addEventListener("scroll", () => {
-    //debounce
-    if (timer) {
+    if (timer)
         clearTimeout(timer);
-    }
     timer = setTimeout(main, 1000);
-});
-// 回答/文章出现（首屏、懒加载、站内跳转）后很快补上按钮，不再等滚动停止
+}, { passive: true });
 let domTimer = null;
 new MutationObserver(() => {
     if (domTimer)

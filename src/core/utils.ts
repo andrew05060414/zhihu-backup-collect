@@ -76,6 +76,35 @@ export const ZhihuLink2NormalLink = (link: string): string => {
  * @param dom - The dom to get title.
  * @returns The title of the dom.
  */
+export const findQuestionTitleElement = (root: ParentNode = document): HTMLElement | null => {
+    const candidates = root.querySelectorAll(
+        "h1.QuestionHeader-title, .QuestionHeader-title, .QuestionPage [data-zop-question] > h1, [data-za-detail-view-path-module='QuestionDescription'] [data-zop-question] > h1, [data-za-detail-view-path-module='QuestionDescription'] h1"
+    )
+    for (const el of Array.from(candidates)) {
+        if (el instanceof HTMLElement && !el.closest("header.AppHeader")) {
+            return el
+        }
+    }
+    return null
+}
+
+export const findQuestionTitleText = (root: ParentNode = document): string => {
+    const zopEl = root.querySelector(".QuestionPage [data-zop-question], [data-za-detail-view-path-module='QuestionDescription'] [data-zop-question]")
+    const zopJson = parseJsonObject(zopEl?.getAttribute("data-zop-question") || null)
+    if (typeof zopJson?.title === "string" && zopJson.title.trim()) {
+        return zopJson.title.trim()
+    }
+    const titleEl = findQuestionTitleElement(root)
+    if (titleEl?.textContent?.trim()) {
+        return titleEl.textContent.trim()
+    }
+    const metaName = root.querySelector("meta[itemprop=name]") as HTMLMetaElement | null
+    if (metaName?.content?.trim()) {
+        return metaName.content.trim()
+    }
+    return ""
+}
+
 export const getTitle = (dom: HTMLElement, scene: string, type: string): string => {
     let t = ""
     try {
@@ -108,11 +137,7 @@ export const getTitle = (dom: HTMLElement, scene: string, type: string): string 
         }
         else if (scene == "question" || scene == "answer") {
             const page = dom.closest('.QuestionPage') || document
-            t = (page.querySelector("meta[itemprop=name]") as HTMLMetaElement | null)?.content ||
-                document.querySelector("h1.QuestionHeader-title")?.textContent ||
-                document.querySelector(".QuestionHeader-title")?.textContent ||
-                page.querySelector("h1")?.textContent ||
-                ""
+            t = findQuestionTitleText(page) || findQuestionTitleText(document)
         }
         else if (scene == "article") {
             t = textOf(dom.closest('.Post-Main')?.querySelector("h1.Post-Title")) ||
