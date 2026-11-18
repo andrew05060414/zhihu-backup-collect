@@ -32,7 +32,7 @@ ${readme}
 `, "utf-8")
 
 //?(?=(##)?)
-fs.writeFileSync("./dist/tampermonkey-script.js", `// ==UserScript==
+const scriptOutput = `// ==UserScript==
 ${TampermonkeyConfig}
 // ==/UserScript==
 
@@ -40,4 +40,7 @@ ${TampermonkeyConfig}
 ${readme.match(/## Changelog.*$/s)[0].slice(0,450).trim() + '...\n...\n'}
  */
 
-${UserScriptContent}`, "utf-8")
+${UserScriptContent}`
+
+fs.writeFileSync("./dist/tampermonkey-script.js", scriptOutput, "utf-8")
+fs.writeFileSync("./dist/zhihu-backup-collect.user.js", scriptOutput, "utf-8")
